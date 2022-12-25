@@ -1,6 +1,7 @@
 import { AfterFind, BelongsTo, Column, CreatedAt, DataType, Default, ForeignKey, HasOne, Model, Table, UpdatedAt } from "sequelize-typescript";
 import { ApiProperty } from "@nestjs/swagger";
 import { Tweet } from "src/tweet/tweet.model";
+import { User } from "src/user/user.model";
 
 interface MediaCreationAttribute {
   path: string;
@@ -42,5 +43,14 @@ export class Media extends Model<Media, MediaCreationAttribute> {
 
     @BelongsTo(() => Tweet,{foreignKey:"id",constraints:true,onDelete:"cascade"})
     tweetRecord: Tweet;
+
+    @ApiProperty({ example: "0", description: "ID of user record (main photo)" })
+    @ForeignKey(() => User)
+    @Column({ type: DataType.UUID, allowNull: true })
+    userId: string;
+
+    @BelongsTo(() => Tweet,{foreignKey:"id",constraints:true,onDelete:"cascade"})
+    user: User;
+
 
 }

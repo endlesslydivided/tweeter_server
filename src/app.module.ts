@@ -16,6 +16,9 @@ import { LikedTweet } from './tweet/likedTweet.model';
 import { SavedTweet } from './tweet/savedTweet.model';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { Subscription } from './subscription/subscription.model';
+import { FilesModule } from './files/files.module';
+import { redisModule } from './module.config';
+import { MailModule } from './mail/mail.module';
 
 
 @Module({
@@ -42,7 +45,10 @@ import { Subscription } from './subscription/subscription.model';
     UserModule,  
     TweetModule,
     MediaModule,
-    SubscriptionModule
+    SubscriptionModule,
+    FilesModule,
+    redisModule,
+    MailModule
     ],
   controllers: [AppController],
   providers: [AppService],

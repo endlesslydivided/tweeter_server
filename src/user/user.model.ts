@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import {BelongsTo,BelongsToMany,Column,CreatedAt,DataType,Default,ForeignKey,HasMany,Model,Table, UpdatedAt} from "sequelize-typescript";
+import {BelongsTo,BelongsToMany,Column,CreatedAt,DataType,Default,ForeignKey,HasMany,HasOne,Model,Table, UpdatedAt} from "sequelize-typescript";
+import { Media } from "src/media/media.model";
 import { Subscription } from "src/subscription/subscription.model";
 import { LikedTweet } from "src/tweet/likedTweet.model";
 import { SavedTweet } from "src/tweet/savedTweet.model";
@@ -7,11 +8,14 @@ import { Tweet } from "src/tweet/tweet.model";
 
   
 interface UserCreationAttribute {
-    firstName: string;
+    firstname: string;
     surname: string;
     email: string;
     password: string;
-    phoneNumber: string;
+    salt: string;
+    sex:string;
+    country:string;
+    city:string;
 }
   
 @Table({tableName:'user'})
@@ -36,9 +40,9 @@ export class User extends Model<User,UserCreationAttribute>
 
     @ApiProperty({ example: "false", description: "Is user's email confirmed?" })
     @Default(false)
-    @Column({ type: DataType.BOOLEAN, allowNull: false})
+    @Column({ type: DataType.BOOLEAN, allowNull: false })
     emailConfirmed: boolean;
-
+  
     @ApiProperty({ example: "12345", description: "User's password hash" })
     @Column({ type: DataType.STRING, unique: false, allowNull: false })
     password: string;
@@ -81,4 +85,9 @@ export class User extends Model<User,UserCreationAttribute>
 
     @BelongsToMany(() => User, () => Subscription,'subscriberId')
     subscriptions: User[];
+
+    @HasOne(() => Media)
+    mainPhoto: Media;
+
+
 }

@@ -4,6 +4,7 @@ import { AuthService } from "./auth.service";
 import { JwtModule } from "@nestjs/jwt";
 import { AccessTokenStrategy } from "./strategy/accessToken.strategy";
 import { RefreshTokenStrategy } from "./strategy/refreshToken.strategy";
+import { AuthRepository } from "./auth.repository";
 
 @Global()
 @Module({
@@ -11,7 +12,8 @@ import { RefreshTokenStrategy } from "./strategy/refreshToken.strategy";
   providers: [
     AuthService,
     AccessTokenStrategy,
-    RefreshTokenStrategy
+    RefreshTokenStrategy,
+    AuthRepository
   ],
   imports:[
 
