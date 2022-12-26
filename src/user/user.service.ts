@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import sequelize from 'sequelize';
+import sequelize, { Transaction } from 'sequelize';
 import { Op } from 'sequelize';
 import { FilterUserParams } from 'src/requestFeatures/filterUser.params';
 import { Subscription } from 'src/subscription/subscription.model';
@@ -15,9 +15,9 @@ export class UserService {
     constructor(@InjectModel(User) private userRepository: typeof User)
     {}
 
-    async createUser(dto: CreateUserDto) 
+    async createUser(dto: CreateUserDto,transaction:Transaction) 
     {
-        return await this.userRepository.create(dto);
+        return await this.userRepository.create(dto,{transaction});
     }
 
 

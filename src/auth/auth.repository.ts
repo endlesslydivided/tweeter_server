@@ -1,9 +1,8 @@
 import { BadRequestException, Inject, Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { Session } from "inspector";
 import { Redis } from "ioredis";
 import { IORedisKey } from "src/redis";
-import { CreateEmailToken, CreateSession, CreateTemporaryUser, EmailToken, TemporaryUser } from "./auth-types";
+import { CreateSession, CreateTemporaryUser, Session, TemporaryUser } from "./auth-types";
 
 
 @Injectable()
@@ -13,7 +12,6 @@ export class AuthRepository
     private readonly logger = new Logger(AuthRepository.name);
     private readonly sessionKey = `session:`;
     private readonly tempUserKey = `tempUser:`;
-    private readonly emailtTokenKey = `emailToken:`;
 
     constructor(@Inject(IORedisKey) private readonly redisClient: Redis)
     {}
@@ -22,8 +20,8 @@ export class AuthRepository
     {
         try 
         {
-            const key = `${this.sessionKey}${refreshSession.userId}`
-            const sessionPath = `.${refreshSession.fingerprint}`;
+            const key = `${this.sessionKey}${refreshSession.userId}`;
+            const sessionPath = `.${refreshSession.id}`;
             await this.redisClient.call('JSON.SET', key, sessionPath, JSON.stringify(refreshSession), 'NX');
             return refreshSession;
         } 
@@ -36,11 +34,11 @@ export class AuthRepository
         }
     }
 
-    async createTemporaryUser(temporaryUser:CreateTemporaryUser)
+    async createTemporaryUser(emailToken:string, temporaryUser:CreateTemporaryUser)
     {
         try 
         {
-            const key = `${this.tempUserKey}${temporaryUser.email}`
+            const key = `${this.tempUserKey}${emailToken}`
             await this.redisClient.call('JSON.SET', key, '.', JSON.stringify(temporaryUser), 'NX');
             return temporaryUser;
         } 
@@ -48,23 +46,6 @@ export class AuthRepository
         {
             this.logger.error(
                 `Failed to add user info ${JSON.stringify(temporaryUser)}\n${e}`,
-            );
-            throw new InternalServerErrorException();   
-        }
-    }
-
-    async createEmailToken(emailTokenRecord:CreateEmailToken)
-    {
-        try 
-        {
-            const key = `${this.emailtTokenKey}${emailTokenRecord.email}`
-            await this.redisClient.call('JSON.SET', key, '.', JSON.stringify(emailTokenRecord), 'NX');
-            return emailTokenRecord;
-        } 
-        catch (e) 
-        {
-            this.logger.error(
-                `Failed to add email token info ${JSON.stringify(emailTokenRecord)}\n${e}`,
             );
             throw new InternalServerErrorException();   
         }
@@ -87,37 +68,39 @@ export class AuthRepository
         } 
         catch (e) 
         {
-            this.logger.error(`Failed to get session ${userId}`);
-            throw new InternalServerErrorException(`Failed to get session ${userId}`);
+            this.logger.error(`Failed to get sessions ${userId}`);
+            throw new InternalServerErrorException(`Failed to get sessions ${userId}`);
         }
     }
 
-    async getEmailToken(email: string): Promise<EmailToken> {
-        this.logger.log(`Attempting to get email token with: ${email}`);
+    async getOneSession(userId: string,sessionId:string): Promise<Session> {
+        this.logger.log(`Attempting to get session with: ${userId}.${sessionId}`);
     
-        const key = `${this.emailtTokenKey}${email}`;
+        const key = `${this.sessionKey}${userId}`
+        const sessionPath = `.${sessionId}`;
     
         try 
         {
-            const emailToken = await this.redisClient.call('JSON.GET',key,'.');    
-            if (!emailToken) 
+            const session = await this.redisClient.call('JSON.GET',key,sessionPath);    
+            if (!session) 
             {
-                throw new BadRequestException('Email token not found');
+                throw new BadRequestException('User session is not found');
             }
-            this.logger.verbose(emailToken);
-            return JSON.parse(emailToken as string);
+
+            this.logger.verbose(session);
+            return JSON.parse(session as string);
         } 
         catch (e) 
         {
-            this.logger.error(`Failed to get email token ${email}`);
-            throw new InternalServerErrorException(`Failed to get email token ${email}`);
+            this.logger.error(`Failed to get session ${userId}.${sessionId}`);
+            throw new InternalServerErrorException(`Failed to get session ${userId}.${sessionId}`);
         }
     }
 
-    async getTemporaryUser(email: string): Promise<TemporaryUser> {
-        this.logger.log(`Attempting to get temporary user with: ${email}`);
+    async getTemporaryUser(emailToken: string): Promise<TemporaryUser> {
+        this.logger.log(`Attempting to get temporary user with: ${emailToken}`);
     
-        const key = `${this.tempUserKey}${email}`;
+        const key = `${this.tempUserKey}${emailToken}`;
     
         try 
         {
@@ -131,16 +114,16 @@ export class AuthRepository
         } 
         catch (e) 
         {
-            this.logger.error(`Failed to get temporary user ${email}`);
-            throw new InternalServerErrorException(`Failed to get temporary user ${email}`);
+            this.logger.error(`Failed to get temporary user ${emailToken}`);
+            throw new InternalServerErrorException(`Failed to get temporary user ${emailToken}`);
         }
     }
     
-    async deleteSession(userId: string, fingerprint:string): Promise<void> {
+    async deleteSession(userId: string, sessionId:string): Promise<void> {
         const key = `${this.sessionKey}${userId}`
-        const sessionPath = `.${fingerprint}`;
+        const sessionPath = `.${sessionId}`;
     
-        this.logger.log(`Deleting session: ${userId}.${fingerprint}`);
+        this.logger.log(`Deleting session: ${userId}.${sessionId}`);
     
         try 
         {
@@ -148,9 +131,9 @@ export class AuthRepository
         } 
         catch (e) 
         {
-          this.logger.error(`Failed to delete session: ${userId}.${fingerprint}`, e);
+          this.logger.error(`Failed to delete session: ${userId}.${sessionId}`, e);
           throw new InternalServerErrorException(
-            `Failed to delete session: ${userId}.${fingerprint}`,
+            `Failed to delete session: ${userId}.${sessionId}`,
           );
         }
     }
@@ -173,28 +156,10 @@ export class AuthRepository
         }
     }
 
-    async deleteTemporaryUser(email: String): Promise<void> {
-        const key = `${this.tempUserKey}${email}`
+    async deleteTemporaryUser(emailToken: string): Promise<void> {
+        const key = `${this.tempUserKey}${emailToken}`
     
-        this.logger.log(`Deleting temporary user info: ${email}`);
-    
-        try 
-        {
-          await this.redisClient.call('JSON.DEL', key);
-        } 
-        catch (e) 
-        {
-          this.logger.error(`Failed to delete temporary user info: ${email}`, e);
-          throw new InternalServerErrorException(
-            `Failed to delete temporary user info: ${email}`,
-          );
-        }
-    }
-
-    async deleteEmailToken(email: String): Promise<void> {
-        const key = `${this.emailtTokenKey}${email}`
-    
-        this.logger.log(`Deleting email token: ${email}`);
+        this.logger.log(`Deleting temporary user info: ${emailToken}`);
     
         try 
         {
@@ -202,13 +167,12 @@ export class AuthRepository
         } 
         catch (e) 
         {
-          this.logger.error(`Failed to delete email token: ${email}`, e);
+          this.logger.error(`Failed to delete temporary user info: ${emailToken}`, e);
           throw new InternalServerErrorException(
-            `Failed to delete email token: ${email}`,
+            `Failed to delete temporary user info: ${emailToken}`,
           );
         }
     }
-
     
 
 }
