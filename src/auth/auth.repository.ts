@@ -11,6 +11,7 @@ export class AuthRepository
 
     private readonly logger = new Logger(AuthRepository.name);
     private readonly sessionKey = `session:`;
+    private readonly userSessionsKey = `userSessions:`;
     private readonly tempUserKey = `tempUser:`;
 
     constructor(@Inject(IORedisKey) private readonly redisClient: Redis)
@@ -20,9 +21,13 @@ export class AuthRepository
     {
         try 
         {
-            const key = `${this.sessionKey}${refreshSession.userId}`;
-            const sessionPath = `.${refreshSession.id}`;
-            await this.redisClient.call('JSON.SET', key, sessionPath, JSON.stringify(refreshSession), 'NX');
+            const sessionKey = `${this.sessionKey}${refreshSession.id}`;
+            const userSessionsKey = `${this.userSessionsKey}${refreshSession.userId}`;
+            await this.redisClient.multi()
+            .set(sessionKey, JSON.stringify(refreshSession), 'NX')
+            .lpush(userSessionsKey,sessionKey)
+            .exec();
+            
             return refreshSession;
         } 
         catch (e) 
@@ -38,8 +43,8 @@ export class AuthRepository
     {
         try 
         {
-            const key = `${this.tempUserKey}${emailToken}`
-            await this.redisClient.call('JSON.SET', key, '.', JSON.stringify(temporaryUser), 'NX');
+            const tempUserKey = `${this.tempUserKey}${emailToken}`
+            await this.redisClient.set(tempUserKey, JSON.stringify(temporaryUser), 'NX');
             return temporaryUser;
         } 
         catch (e) 
@@ -51,20 +56,24 @@ export class AuthRepository
         }
     }
 
-    async getAllSessions(userId: string): Promise<Session> {
+    async getAllUserSessions(userId: string): Promise<string[]> {
         this.logger.log(`Attempting to get session with: ${userId}`);
-    
-        const key = `${this.sessionKey}${userId}`;
+        const userSessionsKey = `${this.userSessionsKey}${userId}`;
     
         try 
         {
-            const sessions = await this.redisClient.call('JSON.GET',key,'.');    
-            if (!sessions) 
+            const sessionsIDs = await this.redisClient.lrange(userSessionsKey,0,-1);    
+            if (!sessionsIDs) 
             {
                 throw new BadRequestException('User sessions are not found');
             }
+            this.logger.verbose(sessionsIDs);
+
+            const sessions = await this.redisClient.mget(sessionsIDs);
+
             this.logger.verbose(sessions);
-            return JSON.parse(sessions as string);
+
+            return sessions;
         } 
         catch (e) 
         {
@@ -73,15 +82,14 @@ export class AuthRepository
         }
     }
 
-    async getOneSession(userId: string,sessionId:string): Promise<Session> {
-        this.logger.log(`Attempting to get session with: ${userId}.${sessionId}`);
+    async getOneSession(sessionId:string): Promise<Session> {
+        this.logger.log(`Attempting to get session with: ${sessionId}`);
     
-        const key = `${this.sessionKey}${userId}`
-        const sessionPath = `.${sessionId}`;
+        const sessionKey = `${this.sessionKey}${sessionId}`
     
         try 
         {
-            const session = await this.redisClient.call('JSON.GET',key,sessionPath);    
+            const session = await this.redisClient.get(sessionKey);    
             if (!session) 
             {
                 throw new BadRequestException('User session is not found');
@@ -92,19 +100,19 @@ export class AuthRepository
         } 
         catch (e) 
         {
-            this.logger.error(`Failed to get session ${userId}.${sessionId}`);
-            throw new InternalServerErrorException(`Failed to get session ${userId}.${sessionId}`);
+            this.logger.error(`Failed to get session ${sessionId}`);
+            throw new InternalServerErrorException(`Failed to get session ${sessionId}`);
         }
     }
 
     async getTemporaryUser(emailToken: string): Promise<TemporaryUser> {
         this.logger.log(`Attempting to get temporary user with: ${emailToken}`);
     
-        const key = `${this.tempUserKey}${emailToken}`;
+        const tempUserKey = `${this.tempUserKey}${emailToken}`;
     
         try 
         {
-            const userInfo = await this.redisClient.call('JSON.GET',key,'.');    
+            const userInfo = await this.redisClient.get(tempUserKey);    
             if (!userInfo) 
             {
                 throw new BadRequestException('User not found');
@@ -119,33 +127,35 @@ export class AuthRepository
         }
     }
     
-    async deleteSession(userId: string, sessionId:string): Promise<void> {
-        const key = `${this.sessionKey}${userId}`
-        const sessionPath = `.${sessionId}`;
-    
-        this.logger.log(`Deleting session: ${userId}.${sessionId}`);
+    async deleteSession(sessionId:string,userId:string): Promise<void> {
+        
+        const sessionKey = `${this.sessionKey}${sessionId}`
+        const userSessionsKey = `${this.userSessionsKey}${userId}`;
+
+        this.logger.log(`Deleting session: .${sessionId}`);
     
         try 
         {
-          await this.redisClient.call('JSON.DEL', key,sessionPath);
+          await this.redisClient.multi().del(sessionKey).lrem(userSessionsKey,1,sessionId);
         } 
         catch (e) 
         {
-          this.logger.error(`Failed to delete session: ${userId}.${sessionId}`, e);
+          this.logger.error(`Failed to delete session: ${sessionId}`, e);
           throw new InternalServerErrorException(
-            `Failed to delete session: ${userId}.${sessionId}`,
+            `Failed to delete session: ${sessionId}`,
           );
         }
     }
 
     async deleteAllSessions(userId: String): Promise<void> {
-        const key = `${this.sessionKey}${userId}`
-    
+        
+        const userSessionsKey = `${this.userSessionsKey}${userId}`
         this.logger.log(`Deleting sessions: ${userId}`);
     
         try 
         {
-          await this.redisClient.call('JSON.DEL', key);
+            const sessionsIDs = await this.redisClient.lrange(userSessionsKey,0,-1);    
+            await this.redisClient.multi().del(sessionsIDs).ltrim(userSessionsKey,-1,0).exec();
         } 
         catch (e) 
         {
@@ -157,13 +167,13 @@ export class AuthRepository
     }
 
     async deleteTemporaryUser(emailToken: string): Promise<void> {
-        const key = `${this.tempUserKey}${emailToken}`
+        const tempUserKey = `${this.tempUserKey}${emailToken}`
     
         this.logger.log(`Deleting temporary user info: ${emailToken}`);
     
         try 
         {
-          await this.redisClient.call('JSON.DEL', key);
+          await this.redisClient.del(tempUserKey);
         } 
         catch (e) 
         {

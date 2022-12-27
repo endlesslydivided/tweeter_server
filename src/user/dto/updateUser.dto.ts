@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsEmail, IsNumber, IsOptional, IsString, Length } from "class-validator";
 
-export class UpdateUserDto {
+export class UpdateUserDTO {
     @ApiProperty({ example: "Alexander", description: "User's firstname" })
     @IsString({ message: "Должно быть строкой" })
     @Length(0, 50, { message: "Длина имени: до 50 символов" })

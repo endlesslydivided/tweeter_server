@@ -5,8 +5,8 @@ import { Op } from 'sequelize';
 import { FilterUserParams } from 'src/requestFeatures/filterUser.params';
 import { Subscription } from 'src/subscription/subscription.model';
 import { Tweet } from 'src/tweet/tweet.model';
-import { CreateUserDto } from './dto/createUser.dto';
-import { UpdateUserDto } from './dto/updateUser.dto';
+import { CreateUserDTO } from './dto/createUser.dto';
+import { UpdateUserDTO } from './dto/updateUser.dto';
 import { User } from './user.model';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class UserService {
     constructor(@InjectModel(User) private userRepository: typeof User)
     {}
 
-    async createUser(dto: CreateUserDto,transaction:Transaction) 
+    async createUser(dto: CreateUserDTO,transaction:Transaction) 
     {
         return await this.userRepository.create(dto,{transaction});
     }
@@ -28,13 +28,13 @@ export class UserService {
 
     async getUserById(id: number) 
     {
-    return await this.userRepository.findByPk(id, {include: [
-        {model:Tweet},
-        {model:Subscription},
-    ],
-    attributes:['id','firstName','lastName','email','city','country','sex',
-                'emailConfirmed','phoneNumber','mainPhoto']
-    });
+        return await this.userRepository.findByPk(id, {include: [
+            {model:Tweet},
+            {model:Subscription},
+        ],
+        attributes:['id','firstName','lastName','email','city','country','sex',
+                    'emailConfirmed','phoneNumber','mainPhoto']
+        });
     }
 
     async getUsers(filters: FilterUserParams) 
@@ -70,7 +70,7 @@ export class UserService {
         return  users;
     }
 
-    async updateUserById(id, dto: UpdateUserDto) 
+    async updateUserById(id, dto: UpdateUserDTO) 
     {
         const user = await this.userRepository.findByPk(id);
 

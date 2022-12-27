@@ -1,4 +1,4 @@
-import { CreateUserDto } from "../user/dto/createUser.dto";
+import { CreateUserDTO } from "../user/dto/createUser.dto";
 
 export type Session =
 {
@@ -7,12 +7,13 @@ export type Session =
     userAgent:string;
     fingerprint:string;
     ip:string;
+    userId:string;
     createdAt:number;
 }
 
-export type TemporaryUser = CreateUserDto
+export type TemporaryUser = CreateUserDTO
 
-export type CreateSession = {userId:string;} & Session
+export type CreateSession = Session
 
 export type CreateTemporaryUser = TemporaryUser
 

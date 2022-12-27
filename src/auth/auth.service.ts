@@ -1,14 +1,18 @@
-import { BadRequestException, ForbiddenException, forwardRef, HttpException, HttpStatus, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, forwardRef, HttpException, HttpStatus, Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { AuthDto } from "./dto/Auth.dto";
+import { AuthDTO } from "./dto/Auth.dto";
 import * as bcrypt from 'bcrypt';
 import { MailService } from "../mail/mail.service";
 import { InjectModel } from "@nestjs/sequelize";
 import { UserService } from "../user/user.service";
-import { CreateUserDto } from "../user/dto/createUser.dto";
+import { CreateUserDTO } from "../user/dto/createUser.dto";
 import { AuthRepository } from "./auth.repository";
 import { User } from "src/user/user.model";
 import { Transaction } from "sequelize";
+import { RefreshTokensDTO } from "./dto/refreshTokens.dto";
+import { PrivacyInfoArgs } from "./decorators/privacyInfoArgs.decorator";
+import { CurrentUserArgs } from "./decorators/currentUserArgs.decorator";
+import { InvalidRefreshTokenException } from "src/exception/invalidRefreshToken.exception";
 
 @Injectable()
 export class AuthService {
@@ -20,13 +24,18 @@ export class AuthService {
                 ) {
     }
 
-    async login(authDto: AuthDto): Promise<{accessToken:string,refreshToken:string}>
+    async signIn(privacyInfoArgs:PrivacyInfoArgs,authDto: AuthDTO): Promise<{accessToken:string,refreshToken:string}>
     {
         const user = await this.validateUser(authDto);
-        const {userAgent,ip,fingerprint} = authDto;
-        const {accessToken,refreshToken} = await this.getTokens(user);
+
+        const {fingerprint} = authDto;
+        const {ip,userAgent} = privacyInfoArgs;
+
         const sessionId = crypto.randomUUID();
-        const allSessions = this.authRepository.getAllSessions(user.id);
+
+        const {accessToken,refreshToken} = await this.getTokens(user);
+
+        const allSessions = this.authRepository.getAllUserSessions(user.id);
         if(Object.keys(allSessions).length >= 10)
         {
             let oldSessionDate:number = 0;
@@ -41,7 +50,7 @@ export class AuthService {
                     }
                 }
             }
-            await this.authRepository.deleteSession(user.id,oldSessionId);
+            await this.authRepository.deleteSession(oldSessionId,user.id);
         }
         await this.authRepository.createSession(
             {   
@@ -56,13 +65,15 @@ export class AuthService {
         return {accessToken,refreshToken:sessionId};
     }
 
-    async logout(sessionId:string,userId: string) 
+    async signOut(sessionId:string) : Promise<void>
     {
-        await this.authRepository.deleteSession(userId,sessionId);
+        const session = await this.authRepository.getOneSession(sessionId);
+        await this.authRepository.deleteSession(sessionId,session.userId);
     }
 
-    async deleteAllSessions(userId: string) 
+    async deleteAllSessions(currentUser: CurrentUserArgs) : Promise<void>
     {
+        const {userId} = currentUser;
         await this.authRepository.deleteAllSessions(userId);
     }
 
@@ -78,7 +89,7 @@ export class AuthService {
         return user;
     }
 
-    async registration(userDto: CreateUserDto) : Promise<void>
+    async signUp(userDto: CreateUserDTO) : Promise<void>
     {
         const candidate = await this.userService.getUserByEmail(userDto.email);
         if (candidate) 
@@ -93,36 +104,34 @@ export class AuthService {
         await this.mailService.sendUserConfirmation(userDto,emailToken);    
     }
 
-    async refreshTokens(sessionId:string,userId:string,fingerprint:string) 
+    async refreshTokens(sessionId: string,fingerprint:string) 
     {
-        const session = await this.authRepository.getOneSession(userId,sessionId);
-        await this.authRepository.deleteSession(userId,sessionId);
+        const session = await this.authRepository.getOneSession(sessionId);
+        await this.authRepository.deleteSession(sessionId,session.userId);
 
         if (!session) 
         {
-            throw new BadRequestException("Refresh session is not found");
+            throw new NotFoundException("Refresh session is not found");
         }
 
         if(session.fingerprint !== fingerprint)
         {
-            throw new BadRequestException("Fingreprints are not equal");
+            await this.authRepository.deleteAllSessions(session.userId);
+            throw new InvalidRefreshTokenException("Fingreprints are not equal");
         }
 
-        const decoded:{email:string,id:string} = await this.jwtService.verifyAsync(session.refreshToken,{algorithms:['RS256'] ,publicKey: process.env.REFRESH_TOKEN_PUBLIC});
+        const decoded = await this.jwtService.verifyAsync(session.refreshToken,{algorithms:['RS256'] ,publicKey: process.env.REFRESH_TOKEN_PUBLIC});
         
         if(!decoded)
         {
-            throw new ForbiddenException("User has no access. Refresh token is expired or invalid. Log in again");       
+            await this.authRepository.deleteAllSessions(session.userId);
+            throw new InvalidRefreshTokenException("User has no access. Refresh token is expired or invalid. Log in again");       
         }
+
         const user = await this.userService.getUserByEmail(decoded.email);
 
-        if (!user) 
-        {
-            throw new BadRequestException("User is not found. Register or log in again");
-        }
-
-        const {accessToken,refreshToken} = await this.getTokens(user);
         const newSessionId = crypto.randomUUID();
+        const {accessToken,refreshToken} = await this.getTokens(user);
         await this.authRepository.createSession(
             {   
                 ...session,
@@ -133,7 +142,6 @@ export class AuthService {
                 createdAt:Date.now()
             });
         return {accessToken,refreshToken:sessionId};
-
     }
 
     async getTokens(user): Promise<{accessToken:string,refreshToken:string}>
@@ -141,8 +149,8 @@ export class AuthService {
         const [accessToken, refreshToken] = await Promise.all([
         this.jwtService.signAsync(
             {
-                id: user.id,
-                email: user.email,
+                userId: user.id,
+                email: user.email       
             },
             {
                 algorithm:'RS256',
@@ -152,8 +160,8 @@ export class AuthService {
         ),
         this.jwtService.signAsync(
             {
-                id: user.id,
-                email: user.email,
+                userId: user.id,
+                email: user.email
             },
             {
                 algorithm:'RS256',
@@ -166,7 +174,7 @@ export class AuthService {
     }
 
   
-    async validateUser(authDto: AuthDto) : Promise<User>
+    async validateUser(authDto: AuthDTO) : Promise<User>
     {
         const user = await this.userService.getUserByEmail(authDto.email);
         if(user)

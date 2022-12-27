@@ -1,6 +1,4 @@
-import { Inject, MiddlewareConsumer, Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { Inject, MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
@@ -19,9 +17,14 @@ import { Subscription } from './subscription/subscription.model';
 import { FilesModule } from './files/files.module';
 import { redisModule } from './module.config';
 import { MailModule } from './mail/mail.module';
+import { AuthMiddleware } from './auth/middlewares/auth.middleware';
+import { RefreshMiddleware } from './auth/middlewares/refresh.middleware';
+import { AuthGuard } from '@nestjs/passport';
+import { APP_GUARD } from '@nestjs/core';
 
 
 @Module({
+  
   imports: [
     ConfigModule.forRoot({
       envFilePath:'.env'
@@ -48,11 +51,14 @@ import { MailModule } from './mail/mail.module';
     SubscriptionModule,
     FilesModule,
     redisModule,
-    MailModule
-    ],
-  controllers: [AppController],
-  providers: [AppService],
+    MailModule,
+    
+    ]
 })
-export class AppModule {
-  
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuthMiddleware,RefreshMiddleware)
+      .forRoutes('(.*)');
+  }
 }

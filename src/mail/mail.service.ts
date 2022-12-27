@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import { CreateUserDto } from 'src/user/dto/createUser.dto';
+import { CreateUserDTO } from 'src/user/dto/createUser.dto';
 
 @Injectable()
 export class MailService {
 
     constructor(private mailerService: MailerService) {}
 
-    async sendUserConfirmation(user: CreateUserDto, emailToken: string) {
+    async sendUserConfirmation(user: CreateUserDTO, emailToken: string) {
       const url = `http://localhost:${process.env.PORT}/auth/confirm?token=${emailToken}`;
   
       await this.mailerService.sendMail(

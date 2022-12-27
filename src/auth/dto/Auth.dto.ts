@@ -1,8 +1,7 @@
-export class AuthDto 
+export interface AuthDTO
 {
-    email: string;
-    password: string;
-    userAgent: string;
-    fingerprint: string;
-    ip: string;
+    email: string,
+    password: string,
+    fingerprint: string,
 }
+
