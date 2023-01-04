@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { HttpExceptionFilter } from './filters/httpException.filter';
+import { VersioningType } from '@nestjs/common';
 
 async function bootstrap() 
 {
@@ -9,7 +10,10 @@ async function bootstrap()
   const app = await NestFactory.create(AppModule);
 
   //Config
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api');
+  app.enableVersioning({
+    type: VersioningType.URI,
+  })
   app.useGlobalFilters(new HttpExceptionFilter());
   app.enableCors({
     origin:  true,
@@ -34,7 +38,7 @@ async function bootstrap()
   
   
   await app.listen(PORT, () => {
-    console.log(`http://localhost:${PORT}`);
+    console.log(`http://localhost:${PORT}/api`);
   });
 }
 bootstrap();

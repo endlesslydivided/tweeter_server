@@ -10,12 +10,7 @@ export class FilterUserParams extends RequestParameters
     this.orderBy = 'createdAt';
     this.orderDirection = 'DESC';
     this.havePhoto =  'false';
-    this.fields = ['id','surname','firstName','sex','email','password','country','sex','mainPhoto','refreshToken'];
   }
-
- 
-  minAge: number = 0;
-  maxAge: number = 130;
 
   sex: string = '';
 

@@ -10,6 +10,4 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
       secretOrKey: process.env.ACCESS_TOKEN_PUBLIC,
     });
   }
-
-
 }

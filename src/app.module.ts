@@ -19,8 +19,6 @@ import { redisModule } from './module.config';
 import { MailModule } from './mail/mail.module';
 import { AuthMiddleware } from './auth/middlewares/auth.middleware';
 import { RefreshMiddleware } from './auth/middlewares/refresh.middleware';
-import { AuthGuard } from '@nestjs/passport';
-import { APP_GUARD } from '@nestjs/core';
 
 
 @Module({

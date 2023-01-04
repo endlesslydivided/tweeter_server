@@ -19,9 +19,4 @@ export class UpdateUserDTO {
     @Length(8, 30, { message: "Длина пароля: от 8 до 30 символов" })
     @IsOptional()
     password: string;
-
-    @ApiProperty({ example: "0", description: "User's main photo ID" })
-    @IsNumber({},{ message: "Должно быть числом" })
-    @IsOptional()
-    mainPhoto: number;
 }

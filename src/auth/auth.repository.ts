@@ -1,5 +1,4 @@
 import { BadRequestException, Inject, Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { Redis } from "ioredis";
 import { IORedisKey } from "src/redis";
 import { CreateSession, CreateTemporaryUser, Session, TemporaryUser } from "./auth-types";
@@ -14,7 +13,7 @@ export class AuthRepository
     private readonly userSessionsKey = `userSessions:`;
     private readonly tempUserKey = `tempUser:`;
 
-    constructor(@Inject(IORedisKey) private readonly redisClient: Redis)
+    constructor(@Inject(IORedisKey) private readonly redisClient)
     {}
 
     async createSession(refreshSession:CreateSession)

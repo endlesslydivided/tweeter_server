@@ -1,6 +1,5 @@
 import { Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
 import { RedisModule } from './redis';
 
 export const redisModule = RedisModule.registerAsync({
@@ -12,6 +11,7 @@ export const redisModule = RedisModule.registerAsync({
       connectionOptions: {
         host: configService.get('REDIS_HOST'),
         port: configService.get('REDIS_PORT'),
+        password:configService.get('REDIS_PASSWORD'),
       },
       onClientReady: (client) => {
         logger.log('Redis client ready');

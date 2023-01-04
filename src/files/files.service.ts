@@ -19,7 +19,7 @@ export class FilesService {
     } 
     catch (e) 
     {
-      throw new InternalServerErrorException("Произошла ошибка при записи файла");
+      throw new InternalServerErrorException("An error occured during file writing");
     }
   }
 
@@ -31,7 +31,7 @@ export class FilesService {
       if (!fs.existsSync(file)) {
         return fs.readFileSync(file);
       } else {
-        throw new NotFoundException("Файла не существует");
+        throw new NotFoundException("File doesn't exist");
       }
 
     } 
@@ -39,7 +39,7 @@ export class FilesService {
       if (isInstance(e, HttpException)) {
         throw e;
       }
-      throw new InternalServerErrorException("Произошла ошибка при чтении файла");
+      throw new InternalServerErrorException("An error occured during file reading");
     }
   }
 }

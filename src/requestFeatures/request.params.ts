@@ -33,7 +33,6 @@ export default class RequestParameters
     public orderBy: string;
     public orderDirection: string;
 
-    public attributes:string[];
     public fields:string[];
 
     
