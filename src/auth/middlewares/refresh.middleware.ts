@@ -15,21 +15,20 @@ export class RefreshMiddleware implements NestMiddleware {
         try 
         {
             const cookie =req.header('cookie');
+            req['refreshSessionId'] = null;
             if(cookie)
             {
                 const refreshTokenString = cookie.split("; ").filter(x => x.startsWith('refreshToken='))[0];
                 if(refreshTokenString)
                 {
-                    const refreshToken = JSON.parse(decodeURIComponent(refreshTokenString.split('refreshToken=')[1]));
+                    const refreshToken = refreshTokenString.split('refreshToken=')[1];
                     if(refreshToken)         
                     { 
                         req['refreshSessionId'] = refreshToken;
-                        next();
                     }
                 }     
-            }   
-            req['refreshSessionId'] = null;
-            next();
+            }
+            next();       
         } 
         catch (e) 
         {

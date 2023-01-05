@@ -13,6 +13,7 @@ import { RefreshTokensDTO } from "./dto/refreshTokens.dto";
 import { PrivacyInfoArgs } from "./decorators/privacyInfoArgs.decorator";
 import { CurrentUserArgs } from "./decorators/currentUserArgs.decorator";
 import { InvalidRefreshTokenException } from "src/exception/invalidRefreshToken.exception";
+import * as crypto from "crypto"
 
 @Injectable()
 export class AuthService {
@@ -35,7 +36,7 @@ export class AuthService {
 
         const {accessToken,refreshToken} = await this.getTokens(user);
 
-        const allSessions = this.authRepository.getAllUserSessions(user.id);
+        const allSessions = await this.authRepository.getAllUserSessions(user.id);
         if(Object.keys(allSessions).length >= 10)
         {
             let oldSessionDate:number = 0;
@@ -77,16 +78,25 @@ export class AuthService {
         await this.authRepository.deleteAllSessions(userId);
     }
 
-    async confirmEmail(emailToken: string,transaction:Transaction) : Promise<User>
+    async getAllSessions(currentUser: CurrentUserArgs) : Promise<string[]>
+    {
+        const {userId} = currentUser;
+        return this.authRepository.getAllUserSessions(userId);
+    }
+
+    async confirmEmail(emailToken: string) : Promise<User>
     {       
-        const tempUser = await this.authRepository.getTemporaryUser(emailToken);      
+        const tempUser = await this.authRepository.getTemporaryUser(emailToken);
+       
         if(!tempUser)
         {
             throw new BadRequestException("Invalid token or email is already confirmed");
         }
-        const user = await this.userService.createUser(tempUser,transaction);
+
+        const user = await this.userService.createUser(tempUser);
         await this.authRepository.deleteTemporaryUser(emailToken);
         return user;
+        
     }
 
     async signUp(userDto: CreateUserDTO) : Promise<void>

@@ -28,7 +28,7 @@ import { RefreshMiddleware } from './auth/middlewares/refresh.middleware';
       envFilePath:'.env'
     }),
     SequelizeModule.forRoot({
-      logging: false,
+      logging: true,
       dialect: "postgres",
       host: process.env.POSTGRES_HOST,
       port: Number(process.env.POSTGRES_PORT),
@@ -57,6 +57,6 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware,RefreshMiddleware)
-      .forRoutes('(.*)');
+      .forRoutes('auth');
   }
 }

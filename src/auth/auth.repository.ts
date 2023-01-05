@@ -68,11 +68,15 @@ export class AuthRepository
             }
             this.logger.verbose(sessionsIDs);
 
-            const sessions = await this.redisClient.mget(sessionsIDs);
+            if(sessionsIDs.length > 0)
+            {
+                const sessions = await this.redisClient.mget(sessionsIDs);
+                this.logger.verbose(sessions);
+                return sessions.map(x => JSON.parse(x));
+            }
 
-            this.logger.verbose(sessions);
+            return [];
 
-            return sessions;
         } 
         catch (e) 
         {
@@ -111,7 +115,7 @@ export class AuthRepository
     
         try 
         {
-            const userInfo = await this.redisClient.get(tempUserKey);    
+            const userInfo =await this.redisClient.get(tempUserKey);    
             if (!userInfo) 
             {
                 throw new BadRequestException('User not found');
@@ -159,9 +163,7 @@ export class AuthRepository
         catch (e) 
         {
           this.logger.error(`Failed to delete session: ${userId}`, e);
-          throw new InternalServerErrorException(
-            `Failed to delete session: ${userId}`,
-          );
+          throw new InternalServerErrorException(`Failed to delete session: ${userId}`);
         }
     }
 
@@ -177,9 +179,7 @@ export class AuthRepository
         catch (e) 
         {
           this.logger.error(`Failed to delete temporary user info: ${emailToken}`, e);
-          throw new InternalServerErrorException(
-            `Failed to delete temporary user info: ${emailToken}`,
-          );
+          throw new InternalServerErrorException(`Failed to delete temporary user info: ${emailToken}`);
         }
     }
     

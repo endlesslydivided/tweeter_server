@@ -10,11 +10,12 @@ async function bootstrap()
   const app = await NestFactory.create(AppModule);
 
   //Config
+  app.useGlobalFilters(new HttpExceptionFilter());
   app.setGlobalPrefix('api');
   app.enableVersioning({
     type: VersioningType.URI,
   })
-  app.useGlobalFilters(new HttpExceptionFilter());
+  
   app.enableCors({
     origin:  true,
     credentials: true,

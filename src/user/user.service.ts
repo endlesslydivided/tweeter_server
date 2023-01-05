@@ -23,9 +23,9 @@ export class UserService {
                 @InjectModel(Media) private mediaRepository: typeof Media,)
     {}
 
-    async createUser(dto: CreateUserDTO,transaction:Transaction) 
+    async createUser(dto: CreateUserDTO) 
     {
-        return await this.userRepository.create(dto,{transaction});
+        return await this.userRepository.create(dto);
     }
 
     async getUserByEmail(email: string) 
@@ -202,7 +202,7 @@ export class UserService {
         })
         .catch((error) => {
           console.log(error);
-          throw new InternalServerErrorException("Subscribtions aren't found. Internal server error/");
+          throw new InternalServerErrorException("Subscribtions aren't found. Internal server error");
         });
   
       return result;

@@ -9,13 +9,13 @@ export class HttpExceptionFilter implements BaseExceptionFilter
   catch(exception: HttpException, host: ArgumentsHost)
   {
     const ctx = host.switchToHttp();
-    const request = ctx.getRequest<Request>();
+    const request:Request = ctx.getRequest<Request>();
+    const response:Response = ctx.getResponse<Response>();
     const status = exception.getStatus();
     
     const message  = exception?.message;
 
-    response
-      .status(status)
+    response.status(status)
       .json({
         message,
         statusCode: status,

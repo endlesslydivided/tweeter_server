@@ -15,25 +15,23 @@ export class AuthMiddleware implements NestMiddleware {
         try 
         {
             const cookie =req.header('cookie');
+            req['currentUser'] = null;
             if(cookie)
             {
                 const accessTokenString = cookie.split("; ").filter(x => x.startsWith('accessToken='))[0];
                 if(accessTokenString)
                 {
-                const accessToken = JSON.parse(decodeURIComponent(accessTokenString.split('accessToken=')[1]));
-                if(accessToken?.token)         
+                    const accessToken = accessTokenString.split('accessToken=')[1];
+                    if(accessToken)         
                     { 
-                        const decoded = await this.jwtService.verifyAsync(accessToken.token,{algorithms:['RS256'] ,publicKey: process.env.ACCESS_TOKEN_PUBLIC});
+                        const decoded = await this.jwtService.verifyAsync(accessToken,{algorithms:['RS256'] ,publicKey: process.env.ACCESS_TOKEN_PUBLIC});
                         if(decoded)
                         {
                             req['currentUser'] = decoded;
-                            next();
                         }   
                     }
                 }     
-            }
-        
-            req['currentUser'] = null;
+            }    
             next();
         } 
         catch (e) 

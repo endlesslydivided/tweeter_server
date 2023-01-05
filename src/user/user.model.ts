@@ -28,7 +28,7 @@ export class User extends Model<User,UserCreationAttribute>
 
     @ApiProperty({ example: "Alexander", description: "User's firstname" })
     @Column({ type: DataType.STRING, allowNull: false })
-    firstName: string;
+    firstname: string;
 
     @ApiProperty({ example: "Kovalyov", description: "User's lastname" })
     @Column({ type: DataType.STRING, allowNull: false })

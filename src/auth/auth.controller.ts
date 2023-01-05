@@ -1,4 +1,4 @@
-import { Body, Controller, forwardRef, Get, HttpStatus, Inject, Param, Post, Query, Req, Res, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, Delete, forwardRef, Get, HttpStatus, Inject, Param, Post, Query, Req, Res, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { ApiCreatedResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Response } from "express";
 import { Transaction } from "sequelize";
@@ -24,9 +24,17 @@ export class AuthController {
     }
 
     @Post('/refreshTokens')
-    refreshTokens(@RefreshTokenArg() refresSessionId: string, @Body() refreshTokensDTO: RefreshTokensDTO) 
+    async refreshTokens(@RefreshTokenArg() refresSessionId: string, @Body() refreshTokensDTO: RefreshTokensDTO,@Res() response: Response) 
     {
-        return this.authService.refreshTokens(refresSessionId,refreshTokensDTO.fingerprint);
+        const body = await this.authService.refreshTokens(refresSessionId,refreshTokensDTO.fingerprint);
+
+        response.cookie("accessToken",body.accessToken,
+        {maxAge: Number(process.env.ACCESS_TOKEN_EXPIRE),httpOnly:true, secure:true, sameSite:"lax"});
+
+        response.cookie("refreshToken",body.refreshToken,
+        {maxAge: Number(process.env.REFRESH_TOKEN_EXPIRE),httpOnly:true, secure:true, sameSite:"lax"});
+
+        response.json(body);
     }
 
     @Post('/signUp')
@@ -35,10 +43,16 @@ export class AuthController {
         return this.authService.signUp(createUserDTO);
     }
 
-    @Post('/remove-sessions')
+    @Delete('/session')
     removeSessions(@CurrentUserArgs() currentUser: CurrentUserArgs) 
     {
         return this.authService.deleteAllSessions(currentUser);
+    }
+
+    @Get('/session')
+    getUserSessions(@CurrentUserArgs() currentUser: CurrentUserArgs) 
+    {
+        return this.authService.getAllSessions(currentUser);
     }
 
     @Post('/signIn')
@@ -65,10 +79,9 @@ export class AuthController {
     }
 
     @Get('/confirm')
-    @UseInterceptors(TransactionInterceptor)
-    confirmEmail(@Query('token') token:string,@Res() res: Response,@TransactionParam() transaction: Transaction) 
+    confirmEmail(@Query('token') token:string,@Res() res: Response) 
     {
-        if(!this.authService.confirmEmail(token,transaction))
+        if(!this.authService.confirmEmail(token))
         {
             res.location(process.env.REACT_SERVER_ADRESS).sendStatus(HttpStatus.TEMPORARY_REDIRECT);
         }
