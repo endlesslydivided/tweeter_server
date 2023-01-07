@@ -49,11 +49,17 @@ export class AuthController {
         return this.authService.deleteAllSessions(currentUser);
     }
 
+    @Delete('/session/:id')
+    removeSession(@Query('id') id:string,@CurrentUserArgs() currentUser: CurrentUserArgs) 
+    {
+        return this.authService.deleteSession(id,currentUser);
+    }
+
     @Get('/session')
     getUserSessions(@CurrentUserArgs() currentUser: CurrentUserArgs) 
     {
         return this.authService.getAllSessions(currentUser);
-    }
+    }  
 
     @Post('/signIn')
     async signIn(@PrivacyInfoArgs() privacyInfo:PrivacyInfoArgs, @Body() authDTO: AuthDTO,@Res() response: Response) 

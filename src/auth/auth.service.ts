@@ -78,11 +78,19 @@ export class AuthService {
         await this.authRepository.deleteAllSessions(userId);
     }
 
+    async deleteSession(id:string,currentUser: CurrentUserArgs) : Promise<void>
+    {
+        const {userId} = currentUser;
+        await this.authRepository.deleteSession(id,userId);
+    }
+
+
     async getAllSessions(currentUser: CurrentUserArgs) : Promise<string[]>
     {
         const {userId} = currentUser;
         return this.authRepository.getAllUserSessions(userId);
     }
+
 
     async confirmEmail(emailToken: string) : Promise<User>
     {       
