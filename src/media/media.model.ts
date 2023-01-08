@@ -5,9 +5,10 @@ import { User } from "src/user/user.model";
 
 interface MediaCreationAttribute {
   path: string;
-  order: number;
-  attachableId: number;
-  attachableType: string;
+  tweetRecordId: string;
+  description: string;
+  originalName: string;
+  type: string;
 }
 
 @Table({ tableName: "media" })

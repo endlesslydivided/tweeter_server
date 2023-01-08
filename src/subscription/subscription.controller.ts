@@ -19,25 +19,25 @@ export class SubscriptionController {
   @ApiCreatedResponse({ type: Subscription })
   @UseInterceptors(TransactionInterceptor)
   @Post()
-  createFriend(@Body() dto: CreateSubsriptionDTO,@TransactionParam() transaction: Transaction
+  createSubscription(@Body() dto: CreateSubsriptionDTO,@TransactionParam() transaction: Transaction
   ) {
     return this.subsService.createSubscription(dto, transaction);
   }
 
-  @ApiOperation({ summary: "Update friend" })
+  @ApiOperation({ summary: "Update subscription" })
   @ApiOkResponse()
   @UseInterceptors(TransactionInterceptor)
   @Put("/:id")
-  updateFriend(@Param("id") id: string,
+  updateSubscription(@Param("id") id: string,
                @Body() dto: UpdateSubscriptionDTO) {
     return this.subsService.updateSubscription(id, dto);
   }
 
-  @ApiOperation({ summary: "Delete friend" })
+  @ApiOperation({ summary: "Delete subscription" })
   @ApiOkResponse()
   @UseInterceptors(TransactionInterceptor)
   @Delete("/:id")
-  deleteFriend(@Param("id") id: string) {
+  deleteSubscription(@Param("id") id: string) {
     return this.subsService.deleteSubscriptionById(id);
   }
 }

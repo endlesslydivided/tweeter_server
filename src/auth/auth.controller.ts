@@ -50,7 +50,7 @@ export class AuthController {
     }
 
     @Delete('/session/:id')
-    removeSession(@Query('id') id:string,@CurrentUserArgs() currentUser: CurrentUserArgs) 
+    removeSession(@Param('id') id:string,@CurrentUserArgs() currentUser: CurrentUserArgs) 
     {
         return this.authService.deleteSession(id,currentUser);
     }

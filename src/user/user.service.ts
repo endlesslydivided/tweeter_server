@@ -130,12 +130,12 @@ export class UserService {
             },
             include:
             [{
-            model: User,
-            attributes: ['id','firstName','surname','email','city','country','sex','mainPhoto'],
-            include:
-            [
-                {model:Media}
-            ]
+              model: User,
+              attributes: ['id','firstName','surname','email','city','country','sex','mainPhoto'],
+              include:
+              [
+                  {model:Media}
+              ]
             }],
             order: [["createdAt", "DESC"]]
         })
@@ -171,7 +171,6 @@ export class UserService {
           order: [["createdAt", "DESC"]]
         })
         .catch((error) => {
-          console.log(error);
           throw new InternalServerErrorException("Followers aren't found. Internal server error/");
         });
       return result;
@@ -201,7 +200,6 @@ export class UserService {
           order: [["createdAt", "DESC"]]
         })
         .catch((error) => {
-          console.log(error);
           throw new InternalServerErrorException("Subscribtions aren't found. Internal server error");
         });
   

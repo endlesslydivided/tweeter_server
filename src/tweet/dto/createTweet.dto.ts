@@ -16,6 +16,7 @@ export class CreateTweetDTO {
 
   @ApiProperty({ example: "false", description: "Is tweet public?" })
   @IsBoolean({ message: "Must be a boolean value" })
+  @IsNotEmpty({ message: "IsPublic isn't presented" })
   isPublic: boolean;
 
   @ApiProperty({ example: "0", description: "ID of tweet author" })
