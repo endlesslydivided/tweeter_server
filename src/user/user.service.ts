@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InternalServerErrorException } from '@nestjs/common/exceptions';
+import { InternalServerErrorException, NotFoundException } from '@nestjs/common/exceptions';
 import { InjectModel } from '@nestjs/sequelize';
 import sequelize, { Sequelize, Transaction } from 'sequelize';
 import { Op } from 'sequelize';
@@ -112,10 +112,72 @@ export class UserService {
             include:[{model:SavedTweet,where:{userId:id}},Media],
             limit: filters.limit,
             offset: filters.offset
-        })
+        }).catch((error) => {
+          throw new InternalServerErrorException("User saved tweets aren't found. Internal server exception");
+        });
 
         return savedTweets;
     }
+
+        
+    //TODO: EDIT TO FIND TWEETS HIERARCHICALLY
+    async getUserTweets(id:string,filters:RequestParameters)
+    {
+        const likedTweets = await this.tweetRepository.findAndCountAll({
+            where: {authorId:id},
+            include:[Media],
+            limit: filters.limit,
+            offset: filters.offset
+        }).catch((error) => {
+          throw new InternalServerErrorException("User tweets aren't found. Internal server exception");
+        });
+
+        return likedTweets;
+    }
+
+    //TODO: EDIT TO FIND TWEETS HIERARCHICALLY
+    async getUserFeed(id: string, filters:RequestParameters) 
+    {
+      const user = await this.getUserById(id).catch((error) => {
+        throw new InternalServerErrorException("User feed isn't found. Internal server error.");
+      });
+  
+      if(!user) throw new NotFoundException("User feed isn't found: user doesn't exists");
+  
+  
+      const friendsIds = user.subscriptions.map(x => x.id);
+
+      const feed = await this.tweetRepository.findAndCountAll(
+        {
+          include: 
+          [{
+            model: Media,
+          },
+          {
+            model: User,
+            include:
+            [
+              {model:Media}
+            ]
+          }],
+          where: { 
+            authorId: 
+            {[Op.or]:
+              {
+                [Op.in] : friendsIds,
+                [Op.eq] : id
+              }
+              
+            } },
+          limit: filters.limit,
+          offset: filters.page *  filters.limit -  filters.limit,
+          order: [["createdAt", "DESC"]]
+        }).catch((error) => {
+          throw new InternalServerErrorException("User feed isn't found. Internal server error/")
+        });
+        
+        return feed;
+      }
 
     async getUserRequests(id: string,filters:RequestParameters) 
     {

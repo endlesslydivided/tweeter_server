@@ -12,7 +12,7 @@ import { SavedTweet } from './savedTweet.model';
 import { Tweet } from './tweet.model';
 import { TweetService } from './tweet.service';
 
-@Controller('tweet')
+@Controller('tweets')
 export class TweetController {
 
     constructor(private tweetService: TweetService) {
@@ -39,7 +39,7 @@ export class TweetController {
 
     @ApiOperation({ summary: "Like tweet" })
     @ApiCreatedResponse({ type: LikedTweet })
-    @Post('../likedTweet')
+    @Post('../likedTweets')
     likeTweet(@Body() dto: LikeTweetDTO) 
     {
         return this.tweetService.createLikedTweet(dto);
@@ -47,21 +47,21 @@ export class TweetController {
 
     @ApiOperation({ summary: "Save tweet" })
     @ApiCreatedResponse({ type: SavedTweet })
-    @Post('../savedTweet')
+    @Post('../savedTweets')
     saveTweet(@Body() dto: SaveTweetDTO) 
     {
         return this.tweetService.createSavedTweet(dto);
     }  
 
     @ApiOperation({ summary: "Delete liked tweet" })
-    @Delete('../likedTweet/:id')
+    @Delete('../likedTweets/:id')
     deleteLikedTweet(@Param('id') id: string) 
     {
         return this.tweetService.deleteSavedTweetById(id);
     }  
 
     @ApiOperation({ summary: "Delete saved tweet" })
-    @Delete('../savedTweet/:id')
+    @Delete('../savedTweets/:id')
     deleteSavedTweet(@Param('id') id: string) 
     {
         return this.tweetService.deleteLikedTweetById(id);
