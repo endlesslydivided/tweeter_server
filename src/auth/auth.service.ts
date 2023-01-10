@@ -12,7 +12,7 @@ import { Transaction } from "sequelize";
 import { RefreshTokensDTO } from "./dto/refreshTokens.dto";
 import { PrivacyInfoArgs } from "./decorators/privacyInfoArgs.decorator";
 import { CurrentUserArgs } from "./decorators/currentUserArgs.decorator";
-import { InvalidRefreshTokenException } from "src/exception/invalidRefreshToken.exception";
+import { InvalidRefreshTokenException } from "../exception/invalidRefreshToken.exception";
 import * as crypto from "crypto"
 
 @Injectable()

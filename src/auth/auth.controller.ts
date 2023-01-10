@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, forwardRef, Get, HttpStatus, Inject, Param, Post, Query, Req, Res, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
-import { ApiCreatedResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Response } from "express";
 import { Transaction } from "sequelize";
 import { TransactionInterceptor } from "src/transactions/transaction.interceptor";
@@ -23,8 +23,11 @@ export class AuthController {
     private authService: AuthService) {
     }
 
+    @ApiOperation({ summary: "Refresh access and refresh tokens" })
+    @ApiOkResponse({ schema: {type:'object',properties:{'accessToken':{type: 'string'},'refreshToken':{type: 'string'}}}})
+    @ApiBody({ type: RefreshTokensDTO })
     @Post('/refreshTokens')
-    async refreshTokens(@RefreshTokenArg() refresSessionId: string, @Body() refreshTokensDTO: RefreshTokensDTO,@Res() response: Response) 
+    async refreshTokens(@RefreshTokenArg() refresSessionId: string, @Body() refreshTokensDTO: RefreshTokensDTO,@Res() response: Response): Promise<void> 
     {
         const body = await this.authService.refreshTokens(refresSessionId,refreshTokensDTO.fingerprint);
 
@@ -37,32 +40,40 @@ export class AuthController {
         response.json(body);
     }
 
+    @ApiOperation({ summary: "SignUp a user" })
+    @ApiBody({ type: CreateUserDTO })
     @Post('/signUp')
-    signUp(@Body() createUserDTO: CreateUserDTO) 
+    signUp(@Body() createUserDTO: CreateUserDTO): Promise<void> 
     {
         return this.authService.signUp(createUserDTO);
     }
 
-    @Delete('/session')
-    removeSessions(@CurrentUserArgs() currentUser: CurrentUserArgs) 
+    @ApiOperation({ summary: "Delete all user sessions" })
+    @Delete('/sessions')
+    removeSessions(@CurrentUserArgs() currentUser: CurrentUserArgs): Promise<void> 
     {
         return this.authService.deleteAllSessions(currentUser);
     }
 
-    @Delete('/session/:id')
-    removeSession(@Param('id') id:string,@CurrentUserArgs() currentUser: CurrentUserArgs) 
+    @ApiOperation({ summary: "Delete a user session" })
+    @Delete('/sessions/:id')
+    removeSession(@Param('id') id:string,@CurrentUserArgs() currentUser: CurrentUserArgs): Promise<void> 
     {
         return this.authService.deleteSession(id,currentUser);
     }
 
-    @Get('/session')
-    getUserSessions(@CurrentUserArgs() currentUser: CurrentUserArgs) 
+    @ApiOperation({ summary: "Get all user sessions" })
+    @Get('/sessions')
+    getUserSessions(@CurrentUserArgs() currentUser: CurrentUserArgs): Promise<string[]> 
     {
         return this.authService.getAllSessions(currentUser);
     }  
 
+    @ApiOperation({ summary: "SignIn a user" })
+    @ApiOkResponse({ schema: {type:'object',properties:{'accessToken':{type: 'string'},'refreshToken':{type: 'string'}}}})
+    @ApiBody({ type: AuthDTO })    
     @Post('/signIn')
-    async signIn(@PrivacyInfoArgs() privacyInfo:PrivacyInfoArgs, @Body() authDTO: AuthDTO,@Res() response: Response) 
+    async signIn(@PrivacyInfoArgs() privacyInfo:PrivacyInfoArgs, @Body() authDTO: AuthDTO,@Res() response: Response): Promise<void> 
     {
         const body = await this.authService.signIn(privacyInfo,authDTO);
 
@@ -76,16 +87,18 @@ export class AuthController {
 
     }
 
+    @ApiOperation({ summary: "SignOut a user" })
     @Post('/signOut')
-    signOut(@RefreshTokenArg() refresSessionId: string,@Res() response: Response) 
+    signOut(@RefreshTokenArg() refresSessionId: string,@Res() response: Response): Promise<void> 
     {
         response.clearCookie("accessToken");
         response.clearCookie("refreshToken");
         return this.authService.signOut(refresSessionId);
     }
 
+    @ApiOperation({ summary: "Confirm user email" })
     @Get('/confirm')
-    confirmEmail(@Query('token') token:string,@Res() res: Response) 
+    confirmEmail(@Query('token') token:string,@Res() res: Response): void 
     {
         if(!this.authService.confirmEmail(token))
         {

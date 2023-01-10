@@ -179,7 +179,7 @@ export class UserService {
         return feed;
       }
 
-    async getUserRequests(id: string,filters:RequestParameters) 
+    async getFollowersRequests(id: string,filters:RequestParameters) 
     {
         const requests = await  this.subsRepository.findAndCountAll(
         {
@@ -207,6 +207,36 @@ export class UserService {
 
         return requests;
     }
+
+    async getFollowingRequests(id: string,filters:RequestParameters) 
+    {
+        const requests = await  this.subsRepository.findAndCountAll(
+        {
+            limit: filters.limit, 
+            offset: filters.offset,
+            where:
+            {
+                subscriberId:  id,
+                isRejected: null
+            },
+            include:
+            [{
+              model: User,
+              attributes: ['id','firstName','surname','email','city','country','sex','mainPhoto'],
+              include:
+              [
+                  {model:Media}
+              ]
+            }],
+            order: [["createdAt", "DESC"]]
+        })
+        .catch((error) => {
+            throw new InternalServerErrorException("Requests aren't found. Internal server exception");
+        });
+
+        return requests;
+    }
+
 
     async getUserFollowers(id: string,filters:RequestParameters) 
     {

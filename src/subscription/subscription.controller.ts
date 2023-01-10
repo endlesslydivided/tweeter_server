@@ -9,7 +9,7 @@ import { UpdateSubscriptionDTO } from './dto/updateSubscription.dto';
 import { Subscription } from './subscription.model';
 import { SubscriptionService } from './subscription.service';
 
-@Controller('subscription')
+@Controller('subscriptions')
 export class SubscriptionController {
 
   constructor(private subsService: SubscriptionService) {

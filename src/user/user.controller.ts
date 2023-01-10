@@ -12,6 +12,7 @@ export class UserController {
     constructor(private userService: UserService) {}
   
     @ApiOperation({ summary: "User update" })
+    @ApiOkResponse({ type: User })
     @Put("/:id")
     updateUser(@Body() dto: UpdateUserDTO,@Param("id") id: string) 
     {
@@ -92,13 +93,20 @@ export class UserController {
     
     @ApiOperation({ summary: "Get paged user's subscription requests" })
     @ApiOkResponse({ type: "{rows:Subscribtion[],count:number}" })
-    @Get("/:id/requests")
-    getSubscribtionRequestsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    @Get("/:id/followingRequests")
+    getFollowingRequestsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
     {
-      return this.userService.getUserRequests(id,filters);
+      return this.userService.getFollowingRequests(id,filters);
     }
 
-     
+    @ApiOperation({ summary: "Get paged requests to subscribe a partircular" })
+    @ApiOkResponse({ type: "{rows:Subscribtion[],count:number}" })
+    @Get("/:id/followersRequests")
+    getFollowersRequestsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    {
+      return this.userService.getFollowersRequests(id,filters);
+    }
+
     
 
 }

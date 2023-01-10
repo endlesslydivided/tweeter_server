@@ -1,4 +1,4 @@
-import { CreateUserDTO } from "../user/dto/createUser.dto";
+import { CreateUserDTO } from "../../user/dto/createUser.dto";
 
 export type Session =
 {
