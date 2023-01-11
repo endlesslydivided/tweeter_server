@@ -139,7 +139,7 @@ export class AuthRepository
     
         try 
         {
-          await this.redisClient.multi().del(sessionKey).lrem(userSessionsKey,1,sessionId).exec();
+          await this.redisClient.multi().del(sessionKey).lrem(userSessionsKey,1,sessionKey).exec();
         } 
         catch (e) 
         {

@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, HttpStatus, Param, ParseFilePipeBuilder, Post, Query, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, HttpStatus, Param, ParseFilePipeBuilder, Post, Query, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiCreatedResponse, ApiOperation } from '@nestjs/swagger';
 import { Transaction } from 'sequelize';
+import { AuthJWTGuard } from 'src/auth/guards/auth.guard';
 import { TransactionInterceptor } from 'src/transactions/transaction.interceptor';
 import { TransactionParam } from 'src/transactions/transactionParam.decorator';
 import { CreateTweetDTO } from './dto/createTweet.dto';
@@ -13,6 +14,7 @@ import { Tweet } from './tweet.model';
 import { TweetService } from './tweet.service';
 
 @Controller('tweets')
+@UseGuards(AuthJWTGuard)
 export class TweetController {
 
     constructor(private tweetService: TweetService) {
@@ -26,8 +28,9 @@ export class TweetController {
     .build({errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY}),)files: Array<Express.Multer.File>,
                 @Body() dto: CreateTweetDTO,
                 @TransactionParam() transaction: Transaction
-    ) {
-    return this.tweetService.createTweet(files,dto,transaction);
+    ) 
+    {
+        return this.tweetService.createTweet(files,dto,transaction);
     }  
 
     @ApiOperation({ summary: "Delete tweet" })

@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { AuthJWTGuard } from 'src/auth/guards/auth.guard';
 import { FilterUserParams } from 'src/requestFeatures/filterUser.params';
 import RequestParameters from 'src/requestFeatures/request.params';
 import { UpdateUserDTO } from './dto/updateUser.dto';
@@ -7,6 +8,7 @@ import { User } from './user.model';
 import { UserService } from './user.service';
 
 @Controller('users')
+@UseGuards(AuthJWTGuard)
 export class UserController {
 
     constructor(private userService: UserService) {}

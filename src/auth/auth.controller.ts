@@ -106,4 +106,12 @@ export class AuthController {
         }
         res.location(`${process.env.REACT_SERVER_ADRESS}/login/success`).sendStatus(HttpStatus.TEMPORARY_REDIRECT); 
     }
+
+    @ApiOperation({ summary: "Get current user data" })
+    @ApiCreatedResponse({ type: User })
+    @Get("/me")
+    getMe(@CurrentUserArgs() currentUser: CurrentUserArgs) 
+    {
+        return this.userService.getUserById(currentUser.userId);
+    }
 }

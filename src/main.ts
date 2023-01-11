@@ -3,6 +3,8 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { HttpExceptionFilter } from './filters/httpException.filter';
 import { VersioningType } from '@nestjs/common';
+import { AuthMiddleware } from './auth/middlewares/auth.middleware';
+import { RefreshMiddleware } from './auth/middlewares/refresh.middleware';
 
 async function bootstrap() 
 {
@@ -23,6 +25,7 @@ async function bootstrap()
     preflightContinue: false,
     optionsSuccessStatus: 204
   });
+
 
   //Swagger
   const config = new DocumentBuilder()
