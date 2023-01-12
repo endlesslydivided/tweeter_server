@@ -15,7 +15,6 @@ export class MessageService {
       
     async createMessage(dto: CreateMessageDto) 
     {   
-      const { text, dialogId, userId } = dto;
       const message =  await this.messageRepository.create(dto, {returning:true}).catch((error) => {
         throw new InternalServerErrorException("Message is not updated.Internal server error");
       });

@@ -24,6 +24,7 @@ import { MessageModule } from './message/message.module';
 import { Dialog } from './dialog/dialog.model';
 import { Message } from './message/message.model';
 import { UserDialog } from './dialog/userDialog.model';
+import { ChatModule } from './chat/chat.module';
 
 
 @Module({
@@ -57,6 +58,7 @@ import { UserDialog } from './dialog/userDialog.model';
     MailModule,
     DialogModule,
     MessageModule,
+    ChatModule,
     
     ]
 })
