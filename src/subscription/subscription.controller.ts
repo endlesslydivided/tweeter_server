@@ -1,16 +1,16 @@
 import { Body, Controller, Delete, Param, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Transaction } from 'sequelize';
-import { AuthJWTGuard } from 'src/auth/guards/auth.guard';
-import { TransactionInterceptor } from 'src/transactions/transaction.interceptor';
-import { TransactionParam } from 'src/transactions/transactionParam.decorator';
-import { UpdateUserDTO } from 'src/user/dto/updateUser.dto';
+import { AuthJWTGuard } from '../auth/guards/auth.guard';
+import { TransactionInterceptor } from '../transactions/transaction.interceptor';
+import { TransactionParam } from '../transactions/transactionParam.decorator';
 import { CreateSubsriptionDTO } from './dto/createSubscription.dto';
 import { UpdateSubscriptionDTO } from './dto/updateSubscription.dto';
 import { Subscription } from './subscription.model';
 import { SubscriptionService } from './subscription.service';
 
-@Controller('subscriptions')
+@ApiTags("Subscription")
+@Controller("subscriptions")
 @UseGuards(AuthJWTGuard)
 export class SubscriptionController {
 

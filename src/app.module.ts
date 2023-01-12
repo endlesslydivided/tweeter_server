@@ -19,6 +19,11 @@ import { redisModule } from './module.config';
 import { MailModule } from './mail/mail.module';
 import { AuthMiddleware } from './auth/middlewares/auth.middleware';
 import { RefreshMiddleware } from './auth/middlewares/refresh.middleware';
+import { DialogModule } from './dialog/dialog.module';
+import { MessageModule } from './message/message.module';
+import { Dialog } from './dialog/dialog.model';
+import { Message } from './message/message.model';
+import { UserDialog } from './dialog/userDialog.model';
 
 
 @Module({
@@ -35,7 +40,7 @@ import { RefreshMiddleware } from './auth/middlewares/refresh.middleware';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      models: [User, Media,Tweet,LikedTweet,SavedTweet,Subscription],
+      models: [User, Media,Tweet,LikedTweet,SavedTweet,Subscription,Dialog,Message,UserDialog],
       autoLoadModels: true,
       synchronize: true
     }),
@@ -50,6 +55,8 @@ import { RefreshMiddleware } from './auth/middlewares/refresh.middleware';
     FilesModule,
     redisModule,
     MailModule,
+    DialogModule,
+    MessageModule,
     
     ]
 })

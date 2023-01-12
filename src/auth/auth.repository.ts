@@ -23,7 +23,7 @@ export class AuthRepository
             const sessionKey = `${this.sessionKey}${refreshSession.id}`;
             const userSessionsKey = `${this.userSessionsKey}${refreshSession.userId}`;
             await this.redisClient.multi()
-            .set(sessionKey, JSON.stringify(refreshSession), 'NX')
+            .set(sessionKey, JSON.stringify(refreshSession), `NX`)
             .lpush(userSessionsKey,sessionKey)
             .exec();
             
@@ -55,7 +55,7 @@ export class AuthRepository
         }
     }
 
-    async getAllUserSessions(userId: string): Promise<string[]> {
+    async getAllUserSessions(userId: string): Promise<Session[] | undefined[]> {
         this.logger.log(`Attempting to get session with: ${userId}`);
         const userSessionsKey = `${this.userSessionsKey}${userId}`;
     
@@ -76,7 +76,6 @@ export class AuthRepository
             }
 
             return [];
-
         } 
         catch (e) 
         {
@@ -158,7 +157,7 @@ export class AuthRepository
         try 
         {
             const sessionsIDs = await this.redisClient.lrange(userSessionsKey,0,-1);    
-            await this.redisClient.multi().del(sessionsIDs).ltrim(userSessionsKey,-1,0).exec();
+            await this.redisClient.multi().del(sessionsIDs).ltrim(userSessionsKey,1,-1).exec();
         } 
         catch (e) 
         {

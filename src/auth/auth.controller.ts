@@ -11,8 +11,10 @@ import { AuthService } from "./auth.service";
 import { CurrentUserArgs } from "./decorators/currentUserArgs.decorator";
 import { PrivacyInfoArgs } from "./decorators/privacyInfoArgs.decorator";
 import { RefreshTokenArg } from "./decorators/refreshTokenArg.decorator";
+import { Session } from "./dto/auth-types";
 import { AuthDTO } from "./dto/Auth.dto";
 import { RefreshTokensDTO } from "./dto/refreshTokens.dto";
+import { AuthJWTGuard } from "./guards/auth.guard";
 
 
 @ApiTags("Authorization")
@@ -64,7 +66,7 @@ export class AuthController {
 
     @ApiOperation({ summary: "Get all user sessions" })
     @Get('/sessions')
-    getUserSessions(@CurrentUserArgs() currentUser: CurrentUserArgs): Promise<string[]> 
+    getUserSessions(@CurrentUserArgs() currentUser: CurrentUserArgs): Promise<Session[]| undefined[]> 
     {
         return this.authService.getAllSessions(currentUser);
     }  
@@ -109,6 +111,7 @@ export class AuthController {
 
     @ApiOperation({ summary: "Get current user data" })
     @ApiCreatedResponse({ type: User })
+    @UseGuards(AuthJWTGuard)
     @Get("/me")
     getMe(@CurrentUserArgs() currentUser: CurrentUserArgs) 
     {

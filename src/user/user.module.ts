@@ -8,13 +8,15 @@ import { SavedTweet } from '../tweet/savedTweet.model';
 import { LikedTweet } from '../tweet/likedTweet.model';
 import { Subscription } from '../subscription/subscription.model';
 import { Media } from '../media/media.model';
+import { Message } from 'src/message/message.model';
+import { Dialog } from 'src/dialog/dialog.model';
 
 @Module({
   
   providers: [UserService],
   controllers: [UserController],
   imports:[
-    SequelizeModule.forFeature([Tweet, User, SavedTweet,LikedTweet,Subscription,Media]),
+    SequelizeModule.forFeature([Tweet, User, SavedTweet,LikedTweet,Subscription,Media, Message,Dialog]),
   ],
   exports:[
     UserService

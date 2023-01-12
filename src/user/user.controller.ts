@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthJWTGuard } from 'src/auth/guards/auth.guard';
 import { FilterUserParams } from 'src/requestFeatures/filterUser.params';
 import RequestParameters from 'src/requestFeatures/request.params';
@@ -7,7 +7,8 @@ import { UpdateUserDTO } from './dto/updateUser.dto';
 import { User } from './user.model';
 import { UserService } from './user.service';
 
-@Controller('users')
+@ApiTags("Users")
+@Controller("users")
 @UseGuards(AuthJWTGuard)
 export class UserController {
 
@@ -101,7 +102,7 @@ export class UserController {
       return this.userService.getFollowingRequests(id,filters);
     }
 
-    @ApiOperation({ summary: "Get paged requests to subscribe a partircular" })
+    @ApiOperation({ summary: "Get paged requests to subscribe a partircular user" })
     @ApiOkResponse({ type: "{rows:Subscribtion[],count:number}" })
     @Get("/:id/followersRequests")
     getFollowersRequestsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
@@ -109,6 +110,13 @@ export class UserController {
       return this.userService.getFollowersRequests(id,filters);
     }
 
+    @ApiOperation({ summary: "Get paged user dialogs" })
+    @ApiOkResponse({ type: "{rows:Dialog[],count:number}" })
+    @Get("/:id/dialogs")
+    getDialogsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    {
+      return this.userService.getDialogsByUser(id,filters);
+    }
     
 
 }

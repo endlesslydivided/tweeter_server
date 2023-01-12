@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, HttpStatus, Param, ParseFilePipeBuilder, Post, Query, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiCreatedResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Transaction } from 'sequelize';
 import { AuthJWTGuard } from 'src/auth/guards/auth.guard';
 import { TransactionInterceptor } from 'src/transactions/transaction.interceptor';
@@ -13,7 +13,8 @@ import { SavedTweet } from './savedTweet.model';
 import { Tweet } from './tweet.model';
 import { TweetService } from './tweet.service';
 
-@Controller('tweets')
+@ApiTags("Tweets")
+@Controller("tweets")
 @UseGuards(AuthJWTGuard)
 export class TweetController {
 
@@ -42,7 +43,7 @@ export class TweetController {
 
     @ApiOperation({ summary: "Like tweet" })
     @ApiCreatedResponse({ type: LikedTweet })
-    @Post('../likedTweets')
+    @Post('likedTweets')
     likeTweet(@Body() dto: LikeTweetDTO) 
     {
         return this.tweetService.createLikedTweet(dto);
@@ -50,21 +51,21 @@ export class TweetController {
 
     @ApiOperation({ summary: "Save tweet" })
     @ApiCreatedResponse({ type: SavedTweet })
-    @Post('../savedTweets')
+    @Post('savedTweets')
     saveTweet(@Body() dto: SaveTweetDTO) 
     {
         return this.tweetService.createSavedTweet(dto);
     }  
 
     @ApiOperation({ summary: "Delete liked tweet" })
-    @Delete('../likedTweets/:id')
+    @Delete('likedTweets/:id')
     deleteLikedTweet(@Param('id') id: string) 
     {
         return this.tweetService.deleteSavedTweetById(id);
     }  
 
     @ApiOperation({ summary: "Delete saved tweet" })
-    @Delete('../savedTweets/:id')
+    @Delete('savedTweets/:id')
     deleteSavedTweet(@Param('id') id: string) 
     {
         return this.tweetService.deleteLikedTweetById(id);

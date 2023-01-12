@@ -3,7 +3,10 @@ import { InternalServerErrorException, NotFoundException } from '@nestjs/common/
 import { InjectModel } from '@nestjs/sequelize';
 import sequelize, { Sequelize, Transaction } from 'sequelize';
 import { Op } from 'sequelize';
+import { Dialog } from 'src/dialog/dialog.model';
+import { UserDialog } from 'src/dialog/userDialog.model';
 import { Media } from 'src/media/media.model';
+import { Message } from 'src/message/message.model';
 import { FilterUserParams } from 'src/requestFeatures/filterUser.params';
 import RequestParameters from 'src/requestFeatures/request.params';
 import { Subscription } from 'src/subscription/subscription.model';
@@ -20,6 +23,7 @@ export class UserService {
     constructor(@InjectModel(User) private userRepository: typeof User,
                 @InjectModel(Subscription) private subsRepository: typeof Subscription,
                 @InjectModel(Tweet) private tweetRepository: typeof Tweet,
+                @InjectModel(Dialog) private dialogRepository: typeof Dialog,
                 @InjectModel(Media) private mediaRepository: typeof Media,)
     {}
 
@@ -296,5 +300,33 @@ export class UserService {
         });
   
       return result;
+    }
+
+    
+    async getDialogsByUser(userId: string, filters: RequestParameters) 
+    {
+  
+      const dialogs = await this.dialogRepository.findAndCountAll(
+        {
+          include:
+            [
+              { 
+                model:User,attributes:["id","createdAt","firstName","lastName"],where:{id: {[Op.ne]: userId}},include:[{model:Media}]
+              },
+              {
+                model: Message, attributes: ["createdAt", "text", "userId"],order:[["createdAt", "DESC"]], limit: 1
+              },
+              {
+                model:UserDialog,attributes:['dialogId'],where:{userId}
+              }
+            ],
+          limit: filters.limit,
+          offset: filters.page *  filters.limit -  filters.limit,
+          order: [["createdAt", "DESC"]]
+        })
+        .catch((error) => {
+          throw new InternalServerErrorException("Dialogs aren't found. Internal server error");
+        });
+      return dialogs;
     }
 }

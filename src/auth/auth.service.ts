@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, forwardRef, HttpException, HttpStatus, Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, forwardRef, HttpException, HttpStatus, Inject, Injectable, NotFoundException, PreconditionFailedException, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { AuthDTO } from "./dto/Auth.dto";
 import * as bcrypt from 'bcrypt';
@@ -14,6 +14,7 @@ import { PrivacyInfoArgs } from "./decorators/privacyInfoArgs.decorator";
 import { CurrentUserArgs } from "./decorators/currentUserArgs.decorator";
 import { InvalidRefreshTokenException } from "../exception/invalidRefreshToken.exception";
 import * as crypto from "crypto"
+import { Session } from "./dto/auth-types";
 
 @Injectable()
 export class AuthService {
@@ -37,22 +38,34 @@ export class AuthService {
         const {accessToken,refreshToken} = await this.getTokens(user);
 
         const allSessions = await this.authRepository.getAllUserSessions(user.id);
-        if(Object.keys(allSessions).length >= 10)
+        if(allSessions.length !== 0)
         {
-            let oldSessionDate:number = 0;
-            let oldSessionId:string;
-            for (const key in allSessions) {
-                if (allSessions.hasOwnProperty(key)) 
-                {
-                    if(oldSessionDate < allSessions[key]['createdAt']) 
+            if(allSessions.some(x => x.fingerprint === fingerprint))
+            {
+                throw new PreconditionFailedException("Session cannot be created,because user is already authenticated")
+            }
+
+        
+            if(Object.keys(allSessions).length >= 10)
+            {
+                let oldSessionDate:number = 0;
+                let oldSessionId:string;
+                for (const key in allSessions) {
+                    if (allSessions.hasOwnProperty(key)) 
                     {
-                        oldSessionDate = allSessions[key]['createdAt'];
-                        oldSessionId= allSessions[key]['id']
+                        if(oldSessionDate < allSessions[key]['createdAt']) 
+                        {
+                            oldSessionDate = allSessions[key]['createdAt'];
+                            oldSessionId= allSessions[key]['id']
+                        }
                     }
                 }
+                await this.authRepository.deleteSession(oldSessionId,user.id);
             }
-            await this.authRepository.deleteSession(oldSessionId,user.id);
         }
+        
+
+
         await this.authRepository.createSession(
             {   
                 id: sessionId,
@@ -85,7 +98,7 @@ export class AuthService {
     }
 
 
-    async getAllSessions(currentUser: CurrentUserArgs) : Promise<string[]>
+    async getAllSessions(currentUser: CurrentUserArgs) : Promise<Session[]| undefined[]>
     {
         const {userId} = currentUser;
         return this.authRepository.getAllUserSessions(userId);

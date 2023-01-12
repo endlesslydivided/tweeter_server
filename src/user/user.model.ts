@@ -1,6 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
 import {BelongsTo,BelongsToMany,Column,CreatedAt,DataType,Default,ForeignKey,HasMany,HasOne,Model,Table, UpdatedAt} from "sequelize-typescript";
+import { Dialog } from "src/dialog/dialog.model";
+import { UserDialog } from "src/dialog/userDialog.model";
 import { Media } from "src/media/media.model";
+import { Message } from "src/message/message.model";
 import { Subscription } from "src/subscription/subscription.model";
 import { LikedTweet } from "src/tweet/likedTweet.model";
 import { SavedTweet } from "src/tweet/savedTweet.model";
@@ -90,4 +93,21 @@ export class User extends Model<User,UserCreationAttribute>
     mainPhoto: Media;
 
 
+    @BelongsToMany(() => Dialog, () => UserDialog)
+    dialogs: Dialog[];
+
+    @HasMany(() => Dialog, {
+        foreignKey: "creatorId",
+        constraints: true, onDelete: "cascade", onUpdate: "cascade"
+    })
+    createdDialogs: Dialog[];
+
+    @HasMany(() => Message, {
+        foreignKey: "userId",
+        constraints: true, onDelete: "set null", onUpdate: "cascade"
+    })
+    messages: Message[];
+
+    @HasMany(() => UserDialog)
+    userDialog: UserDialog[]
 }
