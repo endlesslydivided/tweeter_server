@@ -32,4 +32,7 @@ export class Subscription extends Model<Subscription, SubscriptionCreationAttrib
     @Column({ type: DataType.BOOLEAN, allowNull:true})
     isRejected: boolean;
 
+    @BelongsTo(() => User,"subscriberId")
+    user: User;
+
 }

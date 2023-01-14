@@ -25,6 +25,7 @@ import { Dialog } from './dialog/dialog.model';
 import { Message } from './message/message.model';
 import { UserDialog } from './dialog/userDialog.model';
 import { ChatModule } from './chat/chat.module';
+import { AuthController } from './auth/auth.controller';
 
 
 @Module({
@@ -65,6 +66,11 @@ import { ChatModule } from './chat/chat.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(AuthMiddleware,RefreshMiddleware).forRoutes('*');
+      .apply(AuthMiddleware)
+      .forRoutes('/tweets','/users','/subscribtions','/dialogs',
+      '/auth/sessions','/auth/me')
+    consumer
+    .apply(RefreshMiddleware)
+    .forRoutes('/auth/refreshTokens','/auth/signOut');
   }
 }

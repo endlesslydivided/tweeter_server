@@ -32,11 +32,7 @@ export class RefreshMiddleware implements NestMiddleware {
         } 
         catch (e) 
         {
-            if (e instanceof HttpException) 
-            {
-                throw e;
-            } 
-            throw new InternalServerErrorException("Internal server error");
+            next();       
         }
     } 
 }

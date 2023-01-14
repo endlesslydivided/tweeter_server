@@ -83,10 +83,10 @@ export class User extends Model<User,UserCreationAttribute>
     likedTweets: Tweet[];
 
     //User's subscribers and subcribtions
-    @BelongsToMany(() => User, () => Subscription,'subscribedUserId')
-    subscribers: User[];
+    @HasMany(() => Subscription,{as:'followers',foreignKey:'subscribedUserId'})
+    followers: Subscription[]
 
-    @BelongsToMany(() => User, () => Subscription,'subscriberId')
+    @HasMany(() => Subscription,{as:'following',foreignKey:'subscriberId'})
     subscriptions: User[];
 
     @HasOne(() => Media)
@@ -110,4 +110,6 @@ export class User extends Model<User,UserCreationAttribute>
 
     @HasMany(() => UserDialog)
     userDialog: UserDialog[]
+
+    
 }

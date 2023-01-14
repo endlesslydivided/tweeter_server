@@ -39,43 +39,33 @@ export class UserService {
 
     async getUserById(id: string) 
     {
-        return await this.userRepository.findByPk(id, {include: [
-            {model:Subscription,where:{subscriberId:id},attributes:["id"],as:"following"},
-            {model:Subscription,where:{subscribedUserId:id},attributes:["id"],as:"followers"},
+        const user = await  this.userRepository.findByPk(id, {include: [
             {model:Media}
         ],
         attributes:[
-           [Sequelize.fn("COUNT", Sequelize.col("following.id")), "following"],
-           [Sequelize.fn("COUNT", Sequelize.col("followers.id")), "followers"],
             'id',
-            'firstName',
-            'surname',
+            'firstname','surname',
             'email',
             'city','country',
             'sex',    
-            'emailConfirmed',
-            'mainPhoto']
+            'emailConfirmed']
         });
+
+        const followersCount = await this.subsRepository.count({where:{subscribedUserId:id}});
+        const subscriptionsCount = await this.subsRepository.count({where:{subscriberId:id}});
+
+        return {user, followersCount, subscriptionsCount};
     }
 
     async getUsers(filters: FilterUserParams) 
     {
-        const whereClause = 
-        {
-            [Op.and]: 
-            [
-                sequelize.where(sequelize.col('country'), { [Op.like]: `%${filters.country}%` } ),
-                sequelize.where(sequelize.col('sex'), { [Op.like]: `%${filters.sex}%` } ),
-                sequelize.where(sequelize.col('city'), { [Op.like]: `%${filters.city}%` } ),
-                sequelize.where(sequelize.col('photo.path'), filters.havePhoto === 'true' ?  {[Op.ne]: null} : {[Op.or]:{[Op.eq]: null,[Op.ne]: null}} )
-            ]
-        }
+       
         const users = await this.userRepository.findAndCountAll({
             limit: filters.limit,
             offset: filters.offset,
             subQuery: false,
-            where: whereClause,
-            order: [[filters.orderBy,filters.orderDirection]]
+            order: [['createdAt','desc']],
+            attributes:{exclude:['password','salt','accessFailedCount','emailConfirmed']}
         })
         return  users;
     }
@@ -142,10 +132,12 @@ export class UserService {
     //TODO: EDIT TO FIND TWEETS HIERARCHICALLY
     async getUserFeed(id: string, filters:RequestParameters) 
     {
-      const user = await this.getUserById(id).catch((error) => {
-        throw new InternalServerErrorException("User feed isn't found. Internal server error.");
+      const user = await  this.userRepository.findByPk(id, {include: [
+        {model:Subscription,where:{subscriberId:id},attributes:["id"],as:"following"},
+       
+      ],
       });
-  
+
       if(!user) throw new NotFoundException("User feed isn't found: user doesn't exists");
   
   
@@ -197,7 +189,7 @@ export class UserService {
             include:
             [{
               model: User,
-              attributes: ['id','firstName','surname','email','city','country','sex','mainPhoto'],
+              attributes: ['id','firstname','surname','email','city','country','sex'],
               include:
               [
                   {model:Media}
@@ -226,7 +218,7 @@ export class UserService {
             include:
             [{
               model: User,
-              attributes: ['id','firstName','surname','email','city','country','sex','mainPhoto'],
+              attributes: ['id','firstname','surname','email','city','country','sex'],
               include:
               [
                   {model:Media}
@@ -258,7 +250,7 @@ export class UserService {
           include:
           [{
             model: User,
-            attributes: ['id','firstName','surname','email','city','country','sex','mainPhoto'],
+            attributes: ['id','firstname','surname','email','city','country','sex'],
             include:
             [
               {model:Media}
@@ -287,7 +279,7 @@ export class UserService {
           include:
           [{
             model: User,
-            attributes: ['id','firstName','surname','email','city','country','sex','mainPhoto'],
+            attributes: ['id','firstname','surname','email','city','country','sex'],
             include:
             [
               {model:Media}
@@ -296,7 +288,7 @@ export class UserService {
           order: [["createdAt", "DESC"]]
         })
         .catch((error) => {
-          throw new InternalServerErrorException("Subscribtions aren't found. Internal server error");
+          throw new InternalServerErrorException("Subscribtions aren't found. Internal server error",{cause:error});
         });
   
       return result;
@@ -311,7 +303,7 @@ export class UserService {
           include:
             [
               { 
-                model:User,attributes:["id","createdAt","firstName","lastName"],where:{id: {[Op.ne]: userId}},include:[{model:Media}]
+                model:User,attributes:["id","createdAt","firstname","surname"],where:{id: {[Op.ne]: userId}},include:[{model:Media}]
               },
               {
                 model: Message, attributes: ["createdAt", "text", "userId"],order:[["createdAt", "DESC"]], limit: 1

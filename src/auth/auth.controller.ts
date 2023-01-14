@@ -51,6 +51,7 @@ export class AuthController {
     }
 
     @ApiOperation({ summary: "Delete all user sessions" })
+    @UseGuards(AuthJWTGuard)
     @Delete('/sessions')
     removeSessions(@CurrentUserArgs() currentUser: CurrentUserArgs): Promise<void> 
     {
@@ -58,6 +59,7 @@ export class AuthController {
     }
 
     @ApiOperation({ summary: "Delete a user session" })
+    @UseGuards(AuthJWTGuard)
     @Delete('/sessions/:id')
     removeSession(@Param('id') id:string,@CurrentUserArgs() currentUser: CurrentUserArgs): Promise<void> 
     {
@@ -65,6 +67,7 @@ export class AuthController {
     }
 
     @ApiOperation({ summary: "Get all user sessions" })
+    @UseGuards(AuthJWTGuard)
     @Get('/sessions')
     getUserSessions(@CurrentUserArgs() currentUser: CurrentUserArgs): Promise<Session[]| undefined[]> 
     {
@@ -91,11 +94,12 @@ export class AuthController {
 
     @ApiOperation({ summary: "SignOut a user" })
     @Post('/signOut')
-    signOut(@RefreshTokenArg() refresSessionId: string,@Res() response: Response): Promise<void> 
+    async signOut(@RefreshTokenArg() refresSessionId: string,@Res() response: Response): Promise<void> 
     {
         response.clearCookie("accessToken");
         response.clearCookie("refreshToken");
-        return this.authService.signOut(refresSessionId);
+        await this.authService.signOut(refresSessionId);
+        response.end();
     }
 
     @ApiOperation({ summary: "Confirm user email" })
@@ -104,9 +108,9 @@ export class AuthController {
     {
         if(!this.authService.confirmEmail(token))
         {
-            res.location(process.env.REACT_SERVER_ADRESS).sendStatus(HttpStatus.TEMPORARY_REDIRECT);
+            res.location(process.env.REACT_SERVER_URI).sendStatus(HttpStatus.TEMPORARY_REDIRECT);
         }
-        res.location(`${process.env.REACT_SERVER_ADRESS}/login/success`).sendStatus(HttpStatus.TEMPORARY_REDIRECT); 
+        res.location(`${process.env.REACT_SERVER_URI}/login/success`).sendStatus(HttpStatus.TEMPORARY_REDIRECT); 
     }
 
     @ApiOperation({ summary: "Get current user data" })
