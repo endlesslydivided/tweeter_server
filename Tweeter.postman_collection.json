@@ -1,0 +1,1185 @@
+{
+	"info": {
+		"_postman_id": "7af066ec-df65-4209-962c-c1fb78305528",
+		"name": "Tweeter",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17373392"
+	},
+	"item": [
+		{
+			"name": "AUTH",
+			"item": [
+				{
+					"name": "SignUp",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"firstname\":\"Kot\",\r\n    \"surname\":\"Baton\",\r\n    \"sex\":\"Man\",\r\n    \"country\":\"Belarus\",\r\n    \"city\":\"Minsk\",\r\n    \"email\":\"bubilda2002@gmail.com\",\r\n    \"password\":\"123456789\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_URL}}/auth/signUp",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"auth",
+								"signUp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "SignIn",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"bubilda2002@gmail.com\",\r\n    \"password\": \"123456789\",\r\n    \"fingerprint\": \"somefingerprint\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_URL}}/auth/signIn",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"auth",
+								"signIn"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "SignOut",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{REFRESH_TOKEN}}",
+								"type": "text"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/auth/signOut",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"auth",
+								"signOut"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh tokens",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{REFRESH_TOKEN}}",
+								"type": "text"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"fingerprint\":\"somefingerprint\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_URL}}/auth/refreshTokens",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"auth",
+								"refreshTokens"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all sessions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{REFRESH_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/auth/sessions",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"auth",
+								"sessions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete all sessions",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{REFRESH_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/auth/sessions",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"auth",
+								"sessions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete session",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{REFRESH_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/auth/sessions/:id",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"auth",
+								"sessions",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "e2e68583-0187-4ef7-8e6e-fd78650eddac"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get current user data",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{REFRESH_TOKEN}}",
+								"type": "text"
+							},
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/auth/me",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "TWEETS",
+			"item": [
+				{
+					"name": "Create tweet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "files",
+									"type": "file",
+									"src": [
+										"/D:/_ALEX/Всякое/01udyHZxyTg.jpg",
+										"/D:/_ALEX/Всякое/4JFyX9GIMQs.jpg",
+										"/D:/_ALEX/Всякое/9_0s-pTQlH8.jpg"
+									]
+								},
+								{
+									"key": "text",
+									"value": "Hi everyone!",
+									"type": "text"
+								},
+								{
+									"key": "isComment",
+									"value": "false",
+									"type": "text"
+								},
+								{
+									"key": "isPublic",
+									"value": "true",
+									"type": "text"
+								},
+								{
+									"key": "authorId",
+									"value": "{{CURRENT_USER_ID}}",
+									"type": "text"
+								},
+								{
+									"key": "parentRecordAuthorId",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "parentRecordId",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "description",
+									"value": "My kitties",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{API_URL}}/tweets",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"tweets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create comment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "files",
+									"type": "file",
+									"src": [
+										"/D:/_ALEX/Всякое/01udyHZxyTg.jpg",
+										"/D:/_ALEX/Всякое/4JFyX9GIMQs.jpg",
+										"/D:/_ALEX/Всякое/9_0s-pTQlH8.jpg"
+									]
+								},
+								{
+									"key": "text",
+									"value": "I commented your tweet!",
+									"type": "text"
+								},
+								{
+									"key": "isComment",
+									"value": "true",
+									"type": "text"
+								},
+								{
+									"key": "isPublic",
+									"value": "true",
+									"type": "text"
+								},
+								{
+									"key": "authorId",
+									"value": "{{CURRENT_USER_ID}}",
+									"type": "text"
+								},
+								{
+									"key": "parentRecordAuthorId",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "parentRecordId",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "My kitties",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{API_URL}}/tweets",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"tweets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete tweet",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "123",
+									"description": "123",
+									"type": "file",
+									"src": "/C:/Users/ON/Desktop/8118340077.pdf"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{API_URL}}/tweets/:id",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"tweets",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "SUBSCRIPTIONS",
+			"item": [
+				{
+					"name": "Create subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"subscriberId\":\"{{CURRENT_USER_ID}}\",\r\n    \"subscribedUserId\": \"72b4d98f-0ed2-4495-84ee-d4832f58ddb6\" \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_URL}}/subscribtions",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"subscribtions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update subscription",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/subscriptions/:id",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"subscriptions",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete subscription",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/subscriptions/:id",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"subscriptions",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "USERS",
+			"item": [
+				{
+					"name": "Get users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/?page=1&limit=10",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/:id",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "72b4d98f-0ed2-4495-84ee-d4832f58ddb6"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user's subscriptions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/:id/subscriptions/?page=1&limit=10",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								":id",
+								"subscriptions",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{CURRENT_USER_ID}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user's followers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/:id/followers/?page=1&limit=10",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								":id",
+								"followers",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "72b4d98f-0ed2-4495-84ee-d4832f58ddb6"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user's liked tweets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/:id/likedTweets/?page=1&limit=10",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								":id",
+								"likedTweets",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "72b4d98f-0ed2-4495-84ee-d4832f58ddb6"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user's saved tweets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/:id/savedTweets?page=1&limit=10",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								":id",
+								"savedTweets"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "72b4d98f-0ed2-4495-84ee-d4832f58ddb6"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user's tweets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/:id/tweets/?page=1&limit=10",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								":id",
+								"tweets",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "72b4d98f-0ed2-4495-84ee-d4832f58ddb6"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user's feed",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/:id/feed?page=1&limit=10",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								":id",
+								"feed"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{CURRENT_USER_ID}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user's media",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/:id/media/?page=1&limit=10",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								":id",
+								"media",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "72b4d98f-0ed2-4495-84ee-d4832f58ddb6"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user's following requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/:id/followingRequests/?page=1&limit=10",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								":id",
+								"followingRequests",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{CURRENT_USER_ID}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user's followers requests Copy",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/:id/followersRequests/?page=1&limit=10",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								":id",
+								"followersRequests",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "72b4d98f-0ed2-4495-84ee-d4832f58ddb6"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update user",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{API_URL}}/users/:id",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create liked tweet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/{{CURRENT_USER_ID}}/likedTweets/:tweetId",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								"{{CURRENT_USER_ID}}",
+								"likedTweets",
+								":tweetId"
+							],
+							"variable": [
+								{
+									"key": "tweetId",
+									"value": "3243b0e5-ae27-40a3-9975-5ab2251f548f"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create saved tweet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/{{CURRENT_USER_ID}}/savedTweets/:tweetId",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								"{{CURRENT_USER_ID}}",
+								"savedTweets",
+								":tweetId"
+							],
+							"variable": [
+								{
+									"key": "tweetId",
+									"value": "3243b0e5-ae27-40a3-9975-5ab2251f548f"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete liked tweet",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/{{CURRENT_USER_ID}}/likedTweets/:tweetId",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								"{{CURRENT_USER_ID}}",
+								"likedTweets",
+								":tweetId"
+							],
+							"variable": [
+								{
+									"key": "tweetId",
+									"value": "3243b0e5-ae27-40a3-9975-5ab2251f548f"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete saved tweet",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/{{CURRENT_USER_ID}}/savedTweets/:tweetId",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								"{{CURRENT_USER_ID}}",
+								"savedTweets",
+								":tweetId"
+							],
+							"variable": [
+								{
+									"key": "tweetId",
+									"value": "3243b0e5-ae27-40a3-9975-5ab2251f548f"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "API_URL",
+			"value": "http://localhost:5000/api",
+			"type": "string"
+		},
+		{
+			"key": "ACCESS_TOKEN",
+			"value": "accessToken=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyZmIzN2FmNy1hOGU3LTRkZTUtYThhMC04MDBiMGFmZTBjNDIiLCJlbWFpbCI6ImJ1YmlsZGEyMDAyQGdtYWlsLmNvbSIsImlhdCI6MTY3Mzg4NzEzMCwiZXhwIjoxNjczODkwNzMwfQ.NNoyt8GFUX6Exu_7kCXXtUEFsqTjzH53CG7Mpf2Vr1WOGzVbZk3VWgYcWG0zDuQ7OabrdUewieIPB4HNMYqjHss13hWRoihwNunfHRuNoqbP8EB2l5M0tFazcqEBL3BjZK_qy6jLp-YN7OkcP4P2rd-HRlnms25HbpSBhAwNekM; Path=/; Secure; HttpOnly; Expires=Mon, 16 Jan 2023 17:38:50 GMT;"
+		},
+		{
+			"key": "REFRESH_TOKEN",
+			"value": "refreshToken=1401a240-d582-4555-a33b-61dbc317ab7d; Path=/; Secure; HttpOnly; Expires=Mon, 23 Jan 2023 16:38:50 GMT;"
+		},
+		{
+			"key": "CURRENT_USER_ID",
+			"value": "2fb37af7-a8e7-4de5-a8a0-800b0afe0c42",
+			"type": "string"
+		}
+	]
+}

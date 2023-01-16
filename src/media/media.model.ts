@@ -41,13 +41,9 @@ export class Media extends Model<Media, MediaCreationAttribute> {
     @BelongsTo(() => Tweet,{foreignKey:"tweetRecordId",constraints:true,onDelete:"cascade"})
     tweetRecord: Tweet;
 
-    @ApiProperty({ example: "0", description: "ID of user record (main photo)" })
-    @ForeignKey(() => User)
-    @Column({ type: DataType.UUID, allowNull: true })
-    userId: string;
-
-    @BelongsTo(() => User,{foreignKey:"userId",constraints:true,onDelete:"cascade"})
+    @HasOne(() => User,"mainPhotoId")
     user: User;
+  
 
 
 }

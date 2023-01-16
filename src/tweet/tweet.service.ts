@@ -1,23 +1,15 @@
-import { BadRequestException, forwardRef, Inject, Injectable, InternalServerErrorException,NotFoundException} from '@nestjs/common';
+import {  forwardRef, Inject, Injectable, InternalServerErrorException,NotFoundException} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import sequelize from 'sequelize';
 import { Transaction } from 'sequelize';
-import { Media } from 'src/media/media.model';
 import { MediaService } from 'src/media/media.service';
 import { CreateTweetDTO } from './dto/createTweet.dto';
-import { LikeTweetDTO } from './dto/likeTweet.dto';
-import { SaveTweetDTO } from './dto/saveTweet.dto';
-import { LikedTweet } from './likedTweet.model';
-import { SavedTweet } from './savedTweet.model';
 import { Tweet } from './tweet.model';
 
 @Injectable()
 export class TweetService {
 
     constructor(@InjectModel(Tweet) private tweetRepository: typeof Tweet,
-                @Inject(forwardRef(() => MediaService)) private mediaService: MediaService,
-                @InjectModel(LikedTweet) private likedTweetRepository: typeof LikedTweet,
-                @InjectModel(SavedTweet) private savedTweetRepository: typeof SavedTweet,)
+                @Inject(forwardRef(() => MediaService)) private mediaService: MediaService,)
     {}
 
     //Tweet
@@ -55,34 +47,6 @@ export class TweetService {
         return await this.tweetRepository.destroy({where:{id}});
     }
  
-    //Saved tweet
-    async createSavedTweet(dto: SaveTweetDTO) 
-    {
-        return await this.savedTweetRepository.create(dto,{returning:true})
-        .catch((error) =>
-        {
-            throw new InternalServerErrorException('Tweet cannot be saved. Internal server error.')
-        });
-    }
-
-    async deleteSavedTweetById(id: string) 
-    {
-        return await this.savedTweetRepository.destroy({where:{id}});
-    }
-
-    //Liked tweet
-    async createLikedTweet(dto: LikeTweetDTO) 
-    {
-        return await this.likedTweetRepository.create(dto,{returning:true})
-        .catch((error) =>
-        {
-            throw new InternalServerErrorException('Tweet cannot be liked. Internal server error.')
-        });
-    }
-
-    async deleteLikedTweetById(id: string) 
-    {
-        return await this.likedTweetRepository.destroy({where:{id}});
-    }
+   
 
 }

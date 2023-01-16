@@ -16,4 +16,10 @@ export class LikedTweet extends Model<LikedTweet> {
   @Column({ type: DataType.UUID })
   tweetId: string;
 
+  @BelongsTo(() => User,"userId")
+  user: User
+
+  @BelongsTo(() => Tweet,"tweetId")
+  tweet: Tweet
+
 }

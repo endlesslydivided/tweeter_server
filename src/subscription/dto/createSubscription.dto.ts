@@ -17,7 +17,7 @@ export class CreateSubsriptionDTO {
   @Transform(({ value }) => Boolean(value))
   @ApiProperty({ example: "false", description: "Did a user reject a request?" })
   @IsOptional()
-  @IsBoolean({message: "IsRejected value must be a vlue"})
+  @IsBoolean({message: "IsRejected value must be a value"})
   isRejected: boolean;
 
 }

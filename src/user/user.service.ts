@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InternalServerErrorException, NotFoundException } from '@nestjs/common/exceptions';
 import { InjectModel } from '@nestjs/sequelize';
-import sequelize, { Sequelize, Transaction } from 'sequelize';
 import { Op } from 'sequelize';
 import { Dialog } from 'src/dialog/dialog.model';
 import { UserDialog } from 'src/dialog/userDialog.model';
@@ -24,7 +23,9 @@ export class UserService {
                 @InjectModel(Subscription) private subsRepository: typeof Subscription,
                 @InjectModel(Tweet) private tweetRepository: typeof Tweet,
                 @InjectModel(Dialog) private dialogRepository: typeof Dialog,
-                @InjectModel(Media) private mediaRepository: typeof Media,)
+                @InjectModel(Media) private mediaRepository: typeof Media,
+                @InjectModel(LikedTweet) private likedTweetRepository: typeof LikedTweet,
+                @InjectModel(SavedTweet) private savedTweetRepository: typeof SavedTweet)
     {}
 
     async createUser(dto: CreateUserDTO) 
@@ -94,22 +95,15 @@ export class UserService {
     {
         const likedTweets = await this.tweetRepository.findAndCountAll({
           distinct: true,
-            include:
-            [
-              {
-                model:LikedTweet,where:{userId:id},               
-                include:[
-                  {
-                    model: User,as:'author',
-                    include: [{model:Media}],
-                    attributes:["id","firstname","surname","country","city"]
-                  }
-                ],
-              },
-              {model:Media}
-            ],
-            limit: filters.limit,
-            offset:filters.page *  filters.limit -  filters.limit
+          include:
+          [
+            {model:LikedTweet,where:{userId:id},attributes:[],},
+            {model:Media,attributes:{exclude:["id","tweetRecordId","userId","updatedAt",]}},
+            {model:User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+          ],
+          attributes:{exclude:["updatedAt"]},
+          limit: filters.limit,
+          offset:filters.page *  filters.limit -  filters.limit
         })
 
         return likedTweets;
@@ -118,23 +112,15 @@ export class UserService {
     async getUserSavedTweets(id:string,filters:RequestParameters)
     {
         const savedTweets = await this.tweetRepository.findAndCountAll({
-            distinct: true,
-            include:
-            [
-              {
-                model:SavedTweet,where:{userId:id},               
-                include:[
-                  {
-                    model: User,as:'author',
-                    include: [{model:Media}],
-                    attributes:["id","firstname","surname","country","city"]
-                  }
-                ],
-              },
-              {model:Media}
-            ],
-            limit: filters.limit,
-            offset:filters.page *  filters.limit -  filters.limit
+          distinct: true,
+          include:
+          [
+            {model:SavedTweet,where:{userId:id},attributes:[],},
+            {model:Media,attributes:{exclude:["id","tweetRecordId","userId","updatedAt",]}},
+            {model:User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+          ],
+          limit: filters.limit,
+          offset:filters.page *  filters.limit -  filters.limit
         }).catch((error) => {
           throw new InternalServerErrorException("User saved tweets aren't found. Internal server exception");
         });
@@ -151,10 +137,7 @@ export class UserService {
             distinct: true,
             include:[
               {model: Media,as:'tweetMedia'},
-              {
-                model: User,as:'author',
-                include: [{model:Media}],attributes:["id","firstname","surname","country","city"]
-              }
+              {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
             ],
             limit: filters.limit,
             offset:filters.page *  filters.limit -  filters.limit
@@ -168,33 +151,24 @@ export class UserService {
     //TODO: EDIT TO FIND TWEETS HIERARCHICALLY
     async getUserFeed(id: string, filters:RequestParameters) 
     {
-      const user = await this.userRepository.findByPk(id, {include: 
-        [
-          {model:Subscription,where:{subscriberId:id},attributes:["id"],as:"following"},
-        ],
-      });
+      const subscriptions = await this.subsRepository.findAll({where:{subscriberId:id},attributes:['subscribedUserId']});
 
-      if(!user) throw new NotFoundException("User feed isn't found: user doesn't exists");
-  
-      const friendsIds = user.subscriptions.map(x => x.id);
+      const subscriptionsIds = subscriptions.map(x => x.subscribedUserId);
 
       const feed = await this.tweetRepository.findAndCountAll(
         {
           distinct:true,
           include: 
-          [{
-            model: Media,
-          },
-          {
-            model: User,as:'author',
-            include: [{model:Media}],attributes:["id","firstname","surname","country","city"]
-          }
-        ],
-          where: { 
+          [
+            {model: Media,},
+            {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+          ],
+          where: 
+          { 
             authorId: 
             {[Op.or]:
               {
-                [Op.in] : friendsIds,
+                [Op.in] : subscriptionsIds,
                 [Op.eq] : id
               }    
             } },
@@ -276,9 +250,7 @@ export class UserService {
           offset:filters.page *  filters.limit -  filters.limit,
           where:
           {
-            subscribedUserId:  id,
-            isRejected: false 
-            
+            subscribedUserId:  id
           },
           include:
           [{
@@ -306,8 +278,7 @@ export class UserService {
           offset:filters.page *  filters.limit -  filters.limit,
           where:
           {
-            subscriberId:  id,
-            isRejected: false          
+            subscriberId:  id
           },
           include:
           [{
@@ -354,4 +325,34 @@ export class UserService {
         });
       return dialogs;
     }
+
+     //Saved tweet
+     async createSavedTweet(userId: string,tweetId:string) 
+     {
+         return await this.savedTweetRepository.create({userId,tweetId},{returning:true})
+         .catch((error) =>
+         {
+             throw new InternalServerErrorException('Tweet cannot be saved. Internal server error.')
+         });
+     }
+ 
+     async deleteSavedTweetById(userId: string,tweetId:string)  
+     {
+         return await this.savedTweetRepository.destroy({where:{userId,tweetId}});
+     }
+ 
+     //Liked tweet
+     async createLikedTweet(userId: string,tweetId:string) 
+     {
+         return await this.likedTweetRepository.create({userId,tweetId},{returning:true})
+         .catch((error) =>
+         {
+             throw new InternalServerErrorException('Tweet cannot be liked. Internal server error.')
+         });
+     }
+ 
+     async deleteLikedTweetById(userId: string,tweetId:string) 
+     {
+         return await this.likedTweetRepository.destroy({where:{userId,tweetId}});
+     }
 }

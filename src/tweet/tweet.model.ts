@@ -73,5 +73,11 @@ export class Tweet extends Model<Tweet, TweetCreationAttribute> {
     @BelongsToMany(() => User, () => LikedTweet,"tweetId")
     usersLikes: User[];
 
+    @HasMany(() => SavedTweet)
+    savedTweets: SavedTweet[]
+
+    @HasMany(() => LikedTweet)
+    likedTweets: LikedTweet[]
+
 }
 

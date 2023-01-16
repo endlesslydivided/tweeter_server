@@ -10,7 +10,7 @@ import { Subscription } from './subscription.model';
 import { SubscriptionService } from './subscription.service';
 
 @ApiTags("Subscription")
-@Controller("subscriptions")
+@Controller("subscribtions")
 @UseGuards(AuthJWTGuard)
 export class SubscriptionController {
 

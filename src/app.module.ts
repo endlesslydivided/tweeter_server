@@ -67,7 +67,7 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware)
-      .forRoutes('/tweets','/users','/subscribtions','/dialogs',
+      .forRoutes('/tweets','/savedTweets','/likedTweets','/users','/subscribtions','/dialogs',
       '/auth/sessions','/auth/me')
     consumer
     .apply(RefreshMiddleware)

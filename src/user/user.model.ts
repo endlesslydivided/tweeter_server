@@ -92,9 +92,16 @@ export class User extends Model<User,UserCreationAttribute>
     @HasMany(() => Subscription,{as:'following',foreignKey:'subscriberId'})
     subscriptions: User[];
 
-    @HasOne(() => Media)
-    mainPhoto: Media;
+    @ApiProperty({ example: "0", description: "ID of main photo" })
+    @ForeignKey(() => Media)
+    @Column({ type: DataType.UUID })
+    mainPhotoId: number;
 
+    @BelongsTo(() => Media, {
+        foreignKey: "mainPhotoId",
+        constraints: true, onDelete: "set null", onUpdate: "cascade"
+      })
+    mainPhoto: Media;
 
     @BelongsToMany(() => Dialog, () => UserDialog)
     dialogs: Dialog[];

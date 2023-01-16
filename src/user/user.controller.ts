@@ -1,8 +1,11 @@
 import { Body, Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Delete, Post } from '@nestjs/common/decorators';
+import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthJWTGuard } from 'src/auth/guards/auth.guard';
 import { FilterUserParams } from 'src/requestFeatures/filterUser.params';
 import RequestParameters from 'src/requestFeatures/request.params';
+import { LikedTweet } from 'src/tweet/likedTweet.model';
+import { SavedTweet } from 'src/tweet/savedTweet.model';
 import { UpdateUserDTO } from './dto/updateUser.dto';
 import { User } from './user.model';
 import { UserService } from './user.service';
@@ -118,5 +121,36 @@ export class UserController {
       return this.userService.getDialogsByUser(id,filters);
     }
     
+
+    @ApiOperation({ summary: "Like tweet" })
+    @ApiCreatedResponse({ type: LikedTweet })
+    @Post('/:id/likedTweets/:tweetId')
+    likeTweet(@Param('userId') userId: string,@Param('tweetId') tweetId: string) 
+    {
+        return this.userService.createLikedTweet(userId,tweetId);
+    }  
+
+    @ApiOperation({ summary: "Save tweet" })
+    @ApiCreatedResponse({ type: SavedTweet })
+    @Post('/:id/savedTweets/:tweetId')
+    saveTweet(@Param('userId') userId: string,@Param('tweetId') tweetId: string) 
+    {
+        return this.userService.createSavedTweet(userId,tweetId);
+    }  
+
+    @ApiOperation({ summary: "Delete liked tweet" })
+    @Delete('/:userId/likedTweets/:tweetId')
+    deleteLikedTweet(@Param('userId') userId: string,@Param('tweetId') tweetId: string) 
+    {
+        return this.userService.deleteSavedTweetById(userId,tweetId);
+    }  
+
+    @ApiOperation({ summary: "Delete saved tweet" })
+    @Delete('/:userId/savedTweets/:tweetId')
+    deleteSavedTweet(@Param('userId') userId: string,@Param('tweetId') tweetId: string) 
+    {
+        return this.userService.deleteLikedTweetById(userId,tweetId);
+    }  
+
 
 }
