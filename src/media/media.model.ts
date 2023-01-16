@@ -20,10 +20,6 @@ export class Media extends Model<Media, MediaCreationAttribute> {
     @Column({ type: DataType.UUID, allowNull:false, primaryKey: true })
     id: number;
 
-    @ApiProperty({ example: "My first media", description: "Media description" })
-    @Column({ type: DataType.TEXT, allowNull: true })
-    description: string;
-
     @ApiProperty({ example: "./media/234awEw909weqdW23ed.jpeg", description: "Media path on server" })
     @Column({ type: DataType.STRING,unique:true, allowNull: false })
     path: string;
@@ -42,7 +38,7 @@ export class Media extends Model<Media, MediaCreationAttribute> {
     @Column({ type: DataType.UUID, allowNull: true })
     tweetRecordId: string;
 
-    @BelongsTo(() => Tweet,{foreignKey:"id",constraints:true,onDelete:"cascade"})
+    @BelongsTo(() => Tweet,{foreignKey:"tweetRecordId",constraints:true,onDelete:"cascade"})
     tweetRecord: Tweet;
 
     @ApiProperty({ example: "0", description: "ID of user record (main photo)" })
@@ -50,7 +46,7 @@ export class Media extends Model<Media, MediaCreationAttribute> {
     @Column({ type: DataType.UUID, allowNull: true })
     userId: string;
 
-    @BelongsTo(() => Tweet,{foreignKey:"id",constraints:true,onDelete:"cascade"})
+    @BelongsTo(() => User,{foreignKey:"userId",constraints:true,onDelete:"cascade"})
     user: User;
 
 

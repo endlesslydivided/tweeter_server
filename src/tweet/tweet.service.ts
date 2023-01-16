@@ -1,5 +1,6 @@
 import { BadRequestException, forwardRef, Inject, Injectable, InternalServerErrorException,NotFoundException} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import sequelize from 'sequelize';
 import { Transaction } from 'sequelize';
 import { Media } from 'src/media/media.model';
 import { MediaService } from 'src/media/media.service';
@@ -22,25 +23,20 @@ export class TweetService {
     //Tweet
     async createTweet(files:any[],dto: CreateTweetDTO,transaction:Transaction) 
     {       
-        const tweet =  this.tweetRepository.create(dto,{transaction,returning:true})
+        const tweet = await this.tweetRepository.create(dto,{transaction,returning:true})
         .catch((error) =>
         {
             throw new InternalServerErrorException('Tweet cannot be created. Internal server error.')
         });
 
-        return tweet.then(async (resultTweet) =>
-            {
-              const mediaPromise = this.mediaService.createTweetMedia(files, resultTweet.id, transaction).catch((error) =>
-              {
-                throw new InternalServerErrorException("Error occured during media creation. Internal server error");
-              });  
-        
-              return resultTweet;                 
-            })
-            .catch((error) => 
-            {
-              throw new InternalServerErrorException("Error occured during media creation. Internal server error");
-            });   
+        const media= await this.mediaService.createTweetMedia(files, tweet.id,transaction)
+        .catch((error) => 
+        {
+            throw new InternalServerErrorException("Error occured during media creation. Internal server error");
+        });   
+
+        return tweet;
+            
       
     }
 

@@ -41,7 +41,7 @@ export class Tweet extends Model<Tweet, TweetCreationAttribute> {
     @Column({ type: DataType.UUID, allowNull: true })
     authorId: string;
 
-    @BelongsTo(() => User,{foreignKey:"id",constraints:true,onDelete:"set null"})
+    @BelongsTo(() => User,{foreignKey:"authorId",constraints:true,onDelete:"set null"})
     author: User;
 
     //Parent record author foreign key
@@ -50,7 +50,7 @@ export class Tweet extends Model<Tweet, TweetCreationAttribute> {
     @Column({ type: DataType.UUID, allowNull: true })
     parentRecordAuthorId: string;
 
-    @BelongsTo(() => User,{foreignKey:"id",constraints:true,onDelete:"set null"})
+    @BelongsTo(() => User,{foreignKey:"parentRecordAuthorId",constraints:true,onDelete:"set null"})
     parentRecordAuthor: User;
 
     //Parent record foreign key
@@ -59,18 +59,18 @@ export class Tweet extends Model<Tweet, TweetCreationAttribute> {
     @Column({ type: DataType.UUID, allowNull: true })
     parentRecordId: string;
 
-    @BelongsTo(() => Tweet,{foreignKey:"id",constraints:true,onDelete:"set null"})
+    @BelongsTo(() => Tweet,{foreignKey:"parentRecordId",constraints:true,onDelete:"set null"})
     parentRecord: Tweet;
 
     //Tweet's media
-    @HasMany(() => Media)
+    @HasMany(() => Media,"tweetRecordId")
     tweetMedia: Media[]
 
     //Users, which saved or liked a tweet
-    @BelongsToMany(() => User, () => SavedTweet)
+    @BelongsToMany(() => User, () => SavedTweet,"tweetId")
     usersSaves: User[];
 
-    @BelongsToMany(() => User, () => LikedTweet)
+    @BelongsToMany(() => User, () => LikedTweet,"tweetId")
     usersLikes: User[];
 
 }

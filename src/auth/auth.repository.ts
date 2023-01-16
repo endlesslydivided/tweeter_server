@@ -9,7 +9,6 @@ export class AuthRepository
 {
 
     private readonly logger = new Logger(AuthRepository.name);
-    private readonly sessionKey = `session:`;
     private readonly userSessionsKey = `userSessions:`;
     private readonly tempUserKey = `tempUser:`;
 
@@ -20,12 +19,8 @@ export class AuthRepository
     {
         try 
         {
-            const sessionKey = `${this.sessionKey}${refreshSession.id}`;
-            const userSessionsKey = `${this.userSessionsKey}${refreshSession.userId}`;
-            await this.redisClient.multi()
-            .set(sessionKey, JSON.stringify(refreshSession), `NX`)
-            .lpush(userSessionsKey,sessionKey)
-            .exec();
+            const userSessionsKey = `${this.userSessionsKey}${refreshSession.userId}:${refreshSession.id}`;
+            await this.redisClient.set(userSessionsKey, JSON.stringify(refreshSession), `PX`,process.env.REFRESH_TOKEN_EXPIRE);
             
             return refreshSession;
         } 
@@ -57,15 +52,13 @@ export class AuthRepository
 
     async getAllUserSessions(userId: string): Promise<Session[] | undefined[]> {
         this.logger.log(`Attempting to get session with: ${userId}`);
-        const userSessionsKey = `${this.userSessionsKey}${userId}`;
-    
+
+        const keyRegExp = `${userId}`;
+
         try 
         {
-            const sessionsIDs = await this.redisClient.lrange(userSessionsKey,0,-1);    
-            if (!sessionsIDs) 
-            {
-                throw new BadRequestException('User sessions are not found');
-            }
+            const sessionsIDs = await this.redisClient.keys(`*${keyRegExp}*`);    
+
             this.logger.verbose(sessionsIDs);
 
             if(sessionsIDs.length > 0)
@@ -87,15 +80,12 @@ export class AuthRepository
     async getOneSession(sessionId:string): Promise<Session> {
         this.logger.log(`Attempting to get session with: ${sessionId}`);
     
-        const sessionKey = `${this.sessionKey}${sessionId}`
-    
+        const keyRegExp = `${sessionId}`;
+
         try 
         {
-            const session = await this.redisClient.get(sessionKey);    
-            if (!session) 
-            {
-                throw new BadRequestException('User session is not found');
-            }
+            const sessionKeys = await this.redisClient.keys(`*${keyRegExp}*`);    
+            const session = await this.redisClient.get(sessionKeys);    
 
             this.logger.verbose(session);
             return JSON.parse(session as string);
@@ -115,10 +105,6 @@ export class AuthRepository
         try 
         {
             const userInfo =await this.redisClient.get(tempUserKey);    
-            if (!userInfo) 
-            {
-                throw new BadRequestException('User not found');
-            }
             this.logger.verbose(userInfo);
             return JSON.parse(userInfo as string);
         } 
@@ -131,14 +117,14 @@ export class AuthRepository
     
     async deleteSession(sessionId:string,userId:string): Promise<void> {
         
-        const sessionKey = `${this.sessionKey}${sessionId}`
-        const userSessionsKey = `${this.userSessionsKey}${userId}`;
+        const userSessionsKey = `${this.userSessionsKey}${userId}:${sessionId}`;
 
-        this.logger.log(`Deleting session: .${sessionId}`);
+
+        this.logger.log(`Deleting session: .${userSessionsKey}`);
     
         try 
         {
-          await this.redisClient.multi().del(sessionKey).lrem(userSessionsKey,1,sessionKey).exec();
+          await this.redisClient.del(userSessionsKey);
         } 
         catch (e) 
         {
@@ -151,13 +137,13 @@ export class AuthRepository
 
     async deleteAllSessions(userId: String): Promise<void> {
         
-        const userSessionsKey = `${this.userSessionsKey}${userId}`
+        const userSessionsKey = `${userId}`
         this.logger.log(`Deleting sessions: ${userId}`);
     
         try 
         {
-            const sessionsIDs = await this.redisClient.lrange(userSessionsKey,0,-1);    
-            await this.redisClient.multi().del(sessionsIDs).ltrim(userSessionsKey,1,-1).exec();
+            const sessionsIDs = await this.redisClient.keys(`*${userSessionsKey}*`);    
+            await this.redisClient.del(sessionsIDs);
         } 
         catch (e) 
         {

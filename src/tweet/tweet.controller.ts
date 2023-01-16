@@ -25,8 +25,7 @@ export class TweetController {
     @ApiCreatedResponse({ type: Tweet })
     @UseInterceptors(TransactionInterceptor,FilesInterceptor('files'))
     @Post()
-    createTweet(@UploadedFiles(new ParseFilePipeBuilder().addMaxSizeValidator({maxSize: 1000 * 1000})
-    .build({errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY}),)files: Array<Express.Multer.File>,
+    createTweet(@UploadedFiles()files: Array<Express.Multer.File>,
                 @Body() dto: CreateTweetDTO,
                 @TransactionParam() transaction: Transaction
     ) 

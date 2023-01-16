@@ -9,7 +9,7 @@ export class FilesService {
 
   async createFile(file: any): Promise<string> {
     try {
-      const fileName = uuid.v4() + path.extname(file.originalName.toString());
+      const fileName = uuid.v4() + path.extname(file.originalname.toString());
       const filePath = path.resolve(__dirname, "..", "static");
       if (!fs.existsSync(filePath)) {
         fs.mkdirSync(filePath, { recursive: true });

@@ -1,39 +1,23 @@
+import { Transform } from "class-transformer";
+import { IsNotEmpty, IsNumber, IsOptional, Max, Min, min } from "class-validator";
 import { OrderItem } from "sequelize";
-
 export default class RequestParameters
 {
+    @Transform(({ value }) => parseInt(value))
+    @IsNumber({},{message:"Limit param must be a number from 1 to 100"})
+    @Min(1) @Max(100)
+    @IsNotEmpty({message:"Limit param must not be empty"})
+    public limit:number = 10;
 
-    private _maxLimit:number = 50;
-    private _limit:number = 10;
-    private _page:number = 1;
-    private _offset:number = 0;
+    @Transform(({ value }) => parseInt(value))
+    @IsNumber({},{message:"Page param must be a number more than 1"})
+    @Min(1) 
+    @IsNotEmpty({message:"Page param must not be empty"})
+    public page:number = 1;
 
-    public get limit() {
-        return this._limit;
-    }
-    public set limit(value: number) {
-        this._limit = (value > this._maxLimit) ? this._maxLimit : value;
-    }
+    @IsOptional()
+    public orderBy: Array<Array<string>>;
 
-    public get page() {
-        return this._page;
-    }
-    public set page(value: number) {
-        this._page = value;
-    }
-
-    public get offset() {
-        return this._offset;
-    }
-    public set offset(value:number) 
-    {
-        this._offset = value;
-    }
-
-    public orderBy: string;
-    public orderDirection: string;
-
-    public fields:string[];
-
-    
+    @IsOptional()
+    public fields:string[]; 
 }

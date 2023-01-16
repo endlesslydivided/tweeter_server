@@ -18,11 +18,11 @@ export class TransactionInterceptor implements NestInterceptor {
     const transaction: Transaction = await this.sequelizeInstance.transaction();
     req.transaction = transaction;
     return next.handle().pipe(
-      tap(() => {
-        transaction.commit();
+      tap(async () => {
+        await transaction.commit();
       }),
-      catchError(err => {
-        transaction.rollback();
+      catchError(async (err) => {
+        await  transaction.rollback();
         return err;
       })
     );

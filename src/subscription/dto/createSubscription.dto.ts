@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { Transform } from "class-transformer";
 import { IsBoolean, IsNotEmpty, IsOptional, IsString, Length } from "class-validator";
 
 export class CreateSubsriptionDTO {
@@ -13,6 +14,7 @@ export class CreateSubsriptionDTO {
   @IsNotEmpty({ message: "Subscribed user ID isn't presented" })
   subscribedUserId: string;
 
+  @Transform(({ value }) => Boolean(value))
   @ApiProperty({ example: "false", description: "Did a user reject a request?" })
   @IsOptional()
   @IsBoolean({message: "IsRejected value must be a vlue"})

@@ -12,21 +12,24 @@ export class MediaService {
         private filesService: FilesService) {
       }
     
-      async createTweetMedia(files: any, tweetRecordId: string, transaction: Transaction): Promise<any[]> {
-        return files.map( async(file) => 
+      createTweetMedia(files: any, tweetRecordId: string,transaction: Transaction) {
+        return Promise.all(files.map( async(file) => 
         {
-            const path =  await this.filesService.createFile(file);
-            const {name:originalName,description} = file;
+            const path = await this.filesService.createFile(file)
+            .catch(error => 
+              { 
+                console.log(error);
+                throw new InternalServerErrorException("Error occured during file writing. Internal server error")
+              });;
+            const {originalname:originalName,mimetype:type} = file;
 
-            const attachment = await this.mediaRepository.create({ path, tweetRecordId,originalName,description }, { transaction })
+            const attachment = await this.mediaRepository.create({ path, tweetRecordId,originalName,type }, { transaction })
             .catch(error => 
             { 
-              console.log(error);
               throw new InternalServerErrorException("Error occured during creating media entry. Internal server error")
             });
-            return attachment
-            
+            return attachment;          
           }
-        );
+        ));
       }
 }

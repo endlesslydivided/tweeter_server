@@ -40,7 +40,7 @@ export class AuthService {
         const allSessions = await this.authRepository.getAllUserSessions(user.id);
         if(allSessions.length !== 0)
         {
-            if(allSessions.some(x => x.fingerprint === fingerprint))
+            if(allSessions.some(x => x && x.fingerprint === fingerprint))
             {
                 throw new PreconditionFailedException("Session cannot be created,because user is already authenticated")
             }
@@ -172,7 +172,7 @@ export class AuthService {
                 refreshToken,
                 createdAt:Date.now()
             });
-        return {accessToken,refreshToken:sessionId};
+        return {accessToken,refreshToken:newSessionId};
     }
 
     async getTokens(user): Promise<{accessToken:string,refreshToken:string}>

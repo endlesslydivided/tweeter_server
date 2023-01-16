@@ -62,7 +62,7 @@ export class UserService {
        
         const users = await this.userRepository.findAndCountAll({
             limit: filters.limit,
-            offset: filters.offset,
+            offset:filters.page *  filters.limit -  filters.limit,
             subQuery: false,
             order: [['createdAt','desc']],
             attributes:{exclude:['password','salt','accessFailedCount','emailConfirmed']}
@@ -80,10 +80,11 @@ export class UserService {
     async getUserMedia(id:string,filters:RequestParameters)
     {
         const media = await this.mediaRepository.findAndCountAll({
-            include:[
-                {model:Tweet,attributes:['id'], where:{authorId:id}}],
-            limit: filters.limit,
-            offset: filters.offset
+          distinct:true,
+          include:[
+              {model:Tweet,attributes:['id'], where:{authorId:id}}],
+          limit: filters.limit,
+          offset:filters.page *  filters.limit -  filters.limit
         })
 
         return media;
@@ -92,9 +93,23 @@ export class UserService {
     async getUserLikedTweets(id:string,filters:RequestParameters)
     {
         const likedTweets = await this.tweetRepository.findAndCountAll({
-            include:[{model:LikedTweet,where:{userId:id}},Media],
+          distinct: true,
+            include:
+            [
+              {
+                model:LikedTweet,where:{userId:id},               
+                include:[
+                  {
+                    model: User,as:'author',
+                    include: [{model:Media}],
+                    attributes:["id","firstname","surname","country","city"]
+                  }
+                ],
+              },
+              {model:Media}
+            ],
             limit: filters.limit,
-            offset: filters.offset
+            offset:filters.page *  filters.limit -  filters.limit
         })
 
         return likedTweets;
@@ -103,9 +118,23 @@ export class UserService {
     async getUserSavedTweets(id:string,filters:RequestParameters)
     {
         const savedTweets = await this.tweetRepository.findAndCountAll({
-            include:[{model:SavedTweet,where:{userId:id}},Media],
+            distinct: true,
+            include:
+            [
+              {
+                model:SavedTweet,where:{userId:id},               
+                include:[
+                  {
+                    model: User,as:'author',
+                    include: [{model:Media}],
+                    attributes:["id","firstname","surname","country","city"]
+                  }
+                ],
+              },
+              {model:Media}
+            ],
             limit: filters.limit,
-            offset: filters.offset
+            offset:filters.page *  filters.limit -  filters.limit
         }).catch((error) => {
           throw new InternalServerErrorException("User saved tweets aren't found. Internal server exception");
         });
@@ -117,53 +146,57 @@ export class UserService {
     //TODO: EDIT TO FIND TWEETS HIERARCHICALLY
     async getUserTweets(id:string,filters:RequestParameters)
     {
-        const likedTweets = await this.tweetRepository.findAndCountAll({
+        const tweets = await this.tweetRepository.findAndCountAll({
             where: {authorId:id},
-            include:[Media],
+            distinct: true,
+            include:[
+              {model: Media,as:'tweetMedia'},
+              {
+                model: User,as:'author',
+                include: [{model:Media}],attributes:["id","firstname","surname","country","city"]
+              }
+            ],
             limit: filters.limit,
-            offset: filters.offset
+            offset:filters.page *  filters.limit -  filters.limit
         }).catch((error) => {
           throw new InternalServerErrorException("User tweets aren't found. Internal server exception");
         });
 
-        return likedTweets;
+        return tweets;
     }
 
     //TODO: EDIT TO FIND TWEETS HIERARCHICALLY
     async getUserFeed(id: string, filters:RequestParameters) 
     {
-      const user = await  this.userRepository.findByPk(id, {include: [
-        {model:Subscription,where:{subscriberId:id},attributes:["id"],as:"following"},
-       
-      ],
+      const user = await this.userRepository.findByPk(id, {include: 
+        [
+          {model:Subscription,where:{subscriberId:id},attributes:["id"],as:"following"},
+        ],
       });
 
       if(!user) throw new NotFoundException("User feed isn't found: user doesn't exists");
-  
   
       const friendsIds = user.subscriptions.map(x => x.id);
 
       const feed = await this.tweetRepository.findAndCountAll(
         {
+          distinct:true,
           include: 
           [{
             model: Media,
           },
           {
-            model: User,
-            include:
-            [
-              {model:Media}
-            ]
-          }],
+            model: User,as:'author',
+            include: [{model:Media}],attributes:["id","firstname","surname","country","city"]
+          }
+        ],
           where: { 
             authorId: 
             {[Op.or]:
               {
                 [Op.in] : friendsIds,
                 [Op.eq] : id
-              }
-              
+              }    
             } },
           limit: filters.limit,
           offset: filters.page *  filters.limit -  filters.limit,
@@ -180,7 +213,7 @@ export class UserService {
         const requests = await  this.subsRepository.findAndCountAll(
         {
             limit: filters.limit, 
-            offset: filters.offset,
+            offset:filters.page *  filters.limit -  filters.limit,
             where:
             {
                 subscribedUserId:  id,
@@ -209,7 +242,7 @@ export class UserService {
         const requests = await  this.subsRepository.findAndCountAll(
         {
             limit: filters.limit, 
-            offset: filters.offset,
+            offset:filters.page *  filters.limit -  filters.limit,
             where:
             {
                 subscriberId:  id,
@@ -240,7 +273,7 @@ export class UserService {
       const result = await this.subsRepository.findAndCountAll(
         {
           limit: filters.limit, 
-          offset: filters.offset,
+          offset:filters.page *  filters.limit -  filters.limit,
           where:
           {
             subscribedUserId:  id,
@@ -270,7 +303,7 @@ export class UserService {
       const result = await this.subsRepository.findAndCountAll(
         {
           limit: filters.limit, 
-          offset: filters.offset,
+          offset:filters.page *  filters.limit -  filters.limit,
           where:
           {
             subscriberId:  id,

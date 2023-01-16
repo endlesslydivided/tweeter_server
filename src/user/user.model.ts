@@ -72,14 +72,17 @@ export class User extends Model<User,UserCreationAttribute>
     accessFailedCount: number;
 
     //User's tweets
-    @HasMany(() => Tweet)
+    @HasMany(() => Tweet,{as:'tweets',foreignKey:'authorId'})
     tweets: Tweet[]
 
+    @HasMany(() => Tweet,"parentRecordAuthorId")
+    userTweetsComments: Tweet[]
+
     //User's saved and liked tweets
-    @BelongsToMany(() => Tweet, () => SavedTweet)
+    @BelongsToMany(() => Tweet, () => SavedTweet,"userId")
     savedTweets: Tweet[];
 
-    @BelongsToMany(() => Tweet, () => LikedTweet)
+    @BelongsToMany(() => Tweet, () => LikedTweet,"userId")
     likedTweets: Tweet[];
 
     //User's subscribers and subcribtions

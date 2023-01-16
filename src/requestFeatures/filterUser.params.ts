@@ -7,8 +7,7 @@ export class FilterUserParams extends RequestParameters
   constructor()
   {
     super();
-    this.orderBy = 'createdAt';
-    this.orderDirection = 'DESC';
+    this.orderBy = [['createdAt','desc']];
     this.havePhoto =  'false';
   }
 

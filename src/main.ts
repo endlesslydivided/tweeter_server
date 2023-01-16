@@ -5,6 +5,7 @@ import { HttpExceptionFilter } from './filters/httpException.filter';
 import { VersioningType } from '@nestjs/common';
 import { AuthMiddleware } from './auth/middlewares/auth.middleware';
 import { RefreshMiddleware } from './auth/middlewares/refresh.middleware';
+import { ValidationPipe } from '@nestjs/common/pipes';
 
 async function bootstrap() 
 {
@@ -13,6 +14,7 @@ async function bootstrap()
 
   //Config
   app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.setGlobalPrefix('api');
   app.enableVersioning({
     type: VersioningType.URI,
