@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InternalServerErrorException, NotFoundException } from '@nestjs/common/exceptions';
-import { InjectModel } from '@nestjs/sequelize';
-import { Op } from 'sequelize';
+import { InjectConnection, InjectModel } from '@nestjs/sequelize';
+import sequelize from 'sequelize';
+import  { Model, Sequelize } from 'sequelize';
+import { Op, QueryTypes } from 'sequelize';
 import { Dialog } from 'src/dialog/dialog.model';
 import { UserDialog } from 'src/dialog/userDialog.model';
 import { Media } from 'src/media/media.model';
@@ -132,20 +134,63 @@ export class UserService {
     //TODO: EDIT TO FIND TWEETS HIERARCHICALLY
     async getUserTweets(id:string,filters:RequestParameters)
     {
-        const tweets = await this.tweetRepository.findAndCountAll({
-            where: {authorId:id},
-            distinct: true,
-            include:[
-              {model: Media,as:'tweetMedia'},
-              {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
-            ],
-            limit: filters.limit,
-            offset:filters.page *  filters.limit -  filters.limit
-        }).catch((error) => {
-          throw new InternalServerErrorException("User tweets aren't found. Internal server exception");
-        });
+       
+       const count = await this.tweetRepository.count({where:{authorId:id,isComment:false}});
+       const rows = await this.tweetRepository.sequelize.query(
+        `WITH RECURSIVE USER_TWEETS AS (
+          SELECT * FROM(
+               SELECT "twitterRecord".* FROM "twitterRecord" WHERE "authorId" = :authorId and
+                    "isComment" = false  ORDER BY "createdAt" ASC OFFSET :offset LIMIT :limit
+           ) tweets      
+          UNION     
+          SELECT "twitterRecord".* FROM "twitterRecord" JOIN USER_TWEETS ON "twitterRecord"."parentRecordId" = USER_TWEETS.id
+       )
+       
+      
+       SELECT twitterRecord."id" as "Tweet.id",
+              twitterRecord."createdAt" as "Tweet.createdAt",
+              twitterRecord."parentRecordId" as "Tweet.parentRecordId",
+              twitterRecord."parentRecordAuthorId" as "Tweet.parentRecordAuthorId",
 
-        return tweets;
+              tweetMedia."id" as "tweetMedia.id",
+              tweetMedia."type" as "tweetMedia.type",
+              tweetMedia."originalName" as "tweetMedia.originalName",
+              tweetMedia."path" as "tweetMedia.path",
+
+              author."id"  as "author.id",
+              author."firstname"  as "author.firstname",
+              author."surname"  as "author.surname",
+              author."country"  as "author.country",
+              author."city"  as "author.city"
+
+       FROM USER_TWEETS twitterRecord
+           left outer join media tweetMedia on twitterRecord."id" = tweetMedia."tweetRecordId"
+           left outer join "user" author on author.id = twitterRecord."authorId";`,
+        {
+          
+          replacements: { 
+            authorId:id, 
+            limit: filters.limit,
+            offset:filters.page *  filters.limit -  filters.limit},
+          type: QueryTypes.SELECT,
+          mapToModel:true,
+          raw:true
+        }
+      ).catch((error) => {
+        throw new InternalServerErrorException("User tweets aren't found. Internal server exception");
+      });
+        // const tweets = await this.tweetRepository.findAndCountAll({
+        //     where: {authorId:id},
+        //     distinct: true,
+        //     include:[
+        //       {model: Media,as:'tweetMedia'},
+        //       {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+        //     ],
+        //     limit: filters.limit,
+        //     offset:filters.page *  filters.limit -  filters.limit
+        // })
+
+      return {count,rows};
     }
 
     //TODO: EDIT TO FIND TWEETS HIERARCHICALLY
@@ -165,6 +210,7 @@ export class UserService {
           ],
           where: 
           { 
+            isComment:false,
             authorId: 
             {[Op.or]:
               {
@@ -250,7 +296,8 @@ export class UserService {
           offset:filters.page *  filters.limit -  filters.limit,
           where:
           {
-            subscribedUserId:  id
+            subscribedUserId:  id,
+            isRejected: false
           },
           include:
           [{
@@ -278,7 +325,8 @@ export class UserService {
           offset:filters.page *  filters.limit -  filters.limit,
           where:
           {
-            subscriberId:  id
+            subscriberId:  id,
+            isRejected: false
           },
           include:
           [{

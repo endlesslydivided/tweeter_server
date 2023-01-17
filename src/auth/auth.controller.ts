@@ -94,11 +94,11 @@ export class AuthController {
 
     @ApiOperation({ summary: "SignOut a user" })
     @Post('/signOut')
-    async signOut(@RefreshTokenArg() refresSessionId: string,@Res() response: Response): Promise<void> 
+    async signOut(@RefreshTokenArg() refreshSession: string,@Res() response: Response): Promise<void> 
     {
+        await this.authService.signOut(refreshSession);
         response.clearCookie("accessToken");
         response.clearCookie("refreshToken");
-        await this.authService.signOut(refresSessionId);
         response.end();
     }
 

@@ -42,11 +42,10 @@ export class AuthService {
         {
             if(allSessions.some(x => x && x.fingerprint === fingerprint))
             {
-                throw new PreconditionFailedException("Session cannot be created,because user is already authenticated")
-            }
-
-        
-            if(Object.keys(allSessions).length >= 10)
+                const oldSession = allSessions.find(x => x && x.fingerprint === fingerprint);
+                await this.authRepository.deleteSession(oldSession.id,user.id);
+            }       
+            else if(Object.keys(allSessions).length >= 10)
             {
                 let oldSessionDate:number = 0;
                 let oldSessionId:string;

@@ -1,4 +1,5 @@
 import {  forwardRef, Inject, Injectable, InternalServerErrorException,NotFoundException} from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common/exceptions';
 import { InjectModel } from '@nestjs/sequelize';
 import { Transaction } from 'sequelize';
 import { MediaService } from 'src/media/media.service';
@@ -14,7 +15,12 @@ export class TweetService {
 
     //Tweet
     async createTweet(files:any[],dto: CreateTweetDTO,transaction:Transaction) 
-    {       
+    {  
+        if(dto.isComment && !dto.parentRecordAuthorId && !dto.parentRecordId)   
+        {
+            throw new BadRequestException('Tweet cannot be created. Comment tweet must contain parent record ID and its author ID.')
+
+        }
         const tweet = await this.tweetRepository.create(dto,{transaction,returning:true})
         .catch((error) =>
         {
