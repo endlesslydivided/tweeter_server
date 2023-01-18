@@ -1,11 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import { HttpExceptionFilter } from './filters/httpException.filter';
 import { VersioningType } from '@nestjs/common';
-import { AuthMiddleware } from './auth/middlewares/auth.middleware';
-import { RefreshMiddleware } from './auth/middlewares/refresh.middleware';
 import { ValidationPipe } from '@nestjs/common/pipes';
+import { ValidationExceptionFactory } from './validation/validation.exceptionFactory';
+import { HttpExceptionFilter } from './exceptions/httpException.filter';
 
 async function bootstrap() 
 {
@@ -14,7 +13,11 @@ async function bootstrap()
 
   //Config
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  app.useGlobalPipes(new ValidationPipe(
+  { 
+    transform: true,
+    exceptionFactory: ValidationExceptionFactory
+  }));
   app.setGlobalPrefix('api');
   app.enableVersioning({
     type: VersioningType.URI,

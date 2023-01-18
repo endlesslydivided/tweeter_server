@@ -4,7 +4,7 @@ import { catchError, tap } from "rxjs/operators";
 import { Transaction } from "sequelize";
 import { Sequelize } from "sequelize-typescript";
 import { InjectConnection } from "@nestjs/sequelize";
-import { InvalidRefreshTokenException } from "src/exception/invalidRefreshToken.exception";
+import { InvalidRefreshTokenException } from "src/exceptions/types/invalidRefreshToken.exception";
 import { Response } from "express";
 
 @Injectable()

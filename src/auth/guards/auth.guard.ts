@@ -25,7 +25,7 @@ export class AuthJWTGuard extends AuthGuard('jwt')
         {
             throw e;
         } 
-        throw new InternalServerErrorException("Internal server error");
+        throw new InternalServerErrorException("Internal server error.");
     }
   }
 }

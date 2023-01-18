@@ -41,15 +41,15 @@ export class UserController {
     }
   
     @ApiOperation({ summary: "Get paged user's subscriptions" })
-    @ApiOkResponse({ type: "{rows:Subscribtion[],count:number}" })
+    @ApiOkResponse({ type: "{rows:Subscription[],count:number}" })
     @Get("/:id/subscriptions")
-    getSubscribtionsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    getSubscriptionsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
     {
-      return this.userService.getUserSubscribtions(id,filters);
+      return this.userService.getUserSubscriptions(id,filters);
     }
 
     @ApiOperation({ summary: "Get paged user's followers" })
-    @ApiOkResponse({ type: "{rows:Subscribtion[],count:number}" })
+    @ApiOkResponse({ type: "{rows:Subscription[],count:number}" })
     @Get("/:id/followers")
     getFollowersByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
     {
@@ -97,7 +97,7 @@ export class UserController {
     }
     
     @ApiOperation({ summary: "Get paged user's subscription requests" })
-    @ApiOkResponse({ type: "{rows:Subscribtion[],count:number}" })
+    @ApiOkResponse({ type: "{rows:Subscription[],count:number}" })
     @Get("/:id/followingRequests")
     getFollowingRequestsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
     {
@@ -105,7 +105,7 @@ export class UserController {
     }
 
     @ApiOperation({ summary: "Get paged requests to subscribe a partircular user" })
-    @ApiOkResponse({ type: "{rows:Subscribtion[],count:number}" })
+    @ApiOkResponse({ type: "{rows:Subscription[],count:number}" })
     @Get("/:id/followersRequests")
     getFollowersRequestsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
     {

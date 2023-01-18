@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Transaction } from 'sequelize';
 import { FilesService } from '../files/files.service';
@@ -6,6 +6,9 @@ import { Media } from './media.model';
 
 @Injectable()
 export class MediaService {
+
+
+    private logger: Logger = new Logger('MediaService');
 
     constructor(
         @InjectModel(Media) private mediaRepository: typeof Media,
@@ -19,7 +22,7 @@ export class MediaService {
             const path = await this.filesService.createFile(file)
             .catch(error => 
               { 
-                console.log(error);
+                this.logger.error(`Error occured during file writing: ${error}`);
                 throw new InternalServerErrorException("Error occured during file writing. Internal server error")
               });;
             const {originalname:originalName,mimetype:type} = file;
@@ -27,6 +30,7 @@ export class MediaService {
             const attachment = await this.mediaRepository.create({ path, tweetRecordId,originalName,type }, { transaction })
             .catch(error => 
             { 
+              this.logger.error(`Error occured during creating media entry: ${error}`);
               throw new InternalServerErrorException("Error occured during creating media entry. Internal server error")
             });
             return attachment;          
@@ -39,7 +43,7 @@ export class MediaService {
         const path = await this.filesService.createFile(file)
         .catch(error => 
           { 
-            console.log(error);
+            this.logger.error(`Error occured during file writing: ${error}`);
             throw new InternalServerErrorException("Error occured during file writing. Internal server error")
           });
 
@@ -48,6 +52,7 @@ export class MediaService {
         const userPhoto = await this.mediaRepository.create({ path, originalName,type }, { transaction })
         .catch(error => 
         { 
+          this.logger.error(`Error occured during creating media entry: ${error}`);
           throw new InternalServerErrorException("Error occured during creating media entry. Internal server error")
         });
         return userPhoto;              

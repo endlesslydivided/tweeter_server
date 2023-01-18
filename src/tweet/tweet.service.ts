@@ -1,4 +1,4 @@
-import {  forwardRef, Inject, Injectable, InternalServerErrorException,NotFoundException} from '@nestjs/common';
+import {  forwardRef, Inject, Injectable, InternalServerErrorException,Logger,NotFoundException} from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common/exceptions';
 import { InjectModel } from '@nestjs/sequelize';
 import { Transaction } from 'sequelize';
@@ -9,27 +9,29 @@ import { Tweet } from './tweet.model';
 @Injectable()
 export class TweetService {
 
-    constructor(@InjectModel(Tweet) private tweetRepository: typeof Tweet,
-                @Inject(forwardRef(() => MediaService)) private mediaService: MediaService,)
-    {}
+    private logger: Logger = new Logger('TweetService');
 
-    //Tweet
+    constructor(@InjectModel(Tweet) private tweetRepository: typeof Tweet,
+                @Inject(forwardRef(() => MediaService)) private mediaService: MediaService){}
+
     async createTweet(files:any[],dto: CreateTweetDTO,transaction:Transaction) 
     {  
         if(dto.isComment && !dto.parentRecordAuthorId && !dto.parentRecordId)   
         {
-            throw new BadRequestException('Tweet cannot be created. Comment tweet must contain parent record ID and its author ID.')
-
+            this.logger.error(`Tweet is not created. Comment tweet must contain parent record ID and its author ID.`);
+            throw new BadRequestException('Tweet is not created. Comment tweet must contain parent record ID and its author ID.')
         }
         const tweet = await this.tweetRepository.create(dto,{transaction,returning:true})
         .catch((error) =>
         {
+            this.logger.error(`Tweet is not created:${error}`);
             throw new InternalServerErrorException('Tweet cannot be created. Internal server error.')
         });
 
         const media= await this.mediaService.createTweetMedia(files, tweet.id,transaction)
         .catch((error) => 
         {
+            this.logger.error(`Tweet is not created:${error}`);
             throw new InternalServerErrorException("Error occured during media creation. Internal server error");
         });   
 
@@ -43,7 +45,8 @@ export class TweetService {
         const tweet = await this.tweetRepository.findByPk(id);
         if(!tweet)
         {
-            throw new NotFoundException(`Tweet isn't found.`)
+            this.logger.error(`Tweet is not found:${id}`);
+            throw new NotFoundException(`Tweet is not found.`)
         }
         return tweet;
     }

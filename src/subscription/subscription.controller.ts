@@ -10,14 +10,14 @@ import { Subscription } from './subscription.model';
 import { SubscriptionService } from './subscription.service';
 
 @ApiTags("Subscription")
-@Controller("subscribtions")
+@Controller("subscriptions")
 @UseGuards(AuthJWTGuard)
 export class SubscriptionController {
 
   constructor(private subsService: SubscriptionService) {
   }
 
-  @ApiOperation({ summary: "Subscribtion creation" })
+  @ApiOperation({ summary: "Subscription creation" })
   @ApiCreatedResponse({ type: Subscription })
   @UseInterceptors(TransactionInterceptor)
   @Post()

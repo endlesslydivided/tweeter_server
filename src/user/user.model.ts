@@ -66,7 +66,7 @@ export class User extends Model<User,UserCreationAttribute>
     @Column({ type: DataType.STRING, allowNull: false})
     city: string;
 
-    @ApiProperty({ example: "0", description: "Failed attempts to access user's account" })
+    @ApiProperty({ example: "123e4567-e89b-12d3-a456-426614174000", description: "Failed attempts to access user's account" })
     @Default(0)
     @Column({ type: DataType.INTEGER })
     accessFailedCount: number;
@@ -92,7 +92,7 @@ export class User extends Model<User,UserCreationAttribute>
     @HasMany(() => Subscription,{as:'following',foreignKey:'subscriberId'})
     subscriptions: User[];
 
-    @ApiProperty({ example: "0", description: "ID of main photo" })
+    @ApiProperty({ example: "123e4567-e89b-12d3-a456-426614174000", description: "ID of main photo" })
     @ForeignKey(() => Media)
     @Column({ type: DataType.UUID })
     mainPhotoId: number;

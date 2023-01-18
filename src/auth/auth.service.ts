@@ -12,7 +12,7 @@ import { Transaction } from "sequelize";
 import { RefreshTokensDTO } from "./dto/refreshTokens.dto";
 import { PrivacyInfoArgs } from "./decorators/privacyInfoArgs.decorator";
 import { CurrentUserArgs } from "./decorators/currentUserArgs.decorator";
-import { InvalidRefreshTokenException } from "../exception/invalidRefreshToken.exception";
+import { InvalidRefreshTokenException } from "../exceptions/types/invalidRefreshToken.exception";
 import * as crypto from "crypto"
 import { Session } from "./dto/auth-types";
 
@@ -63,6 +63,7 @@ export class AuthService {
             }
         }
         
+        await this.mailService.sendUserSignIn(user.email,ip,userAgent);    
 
 
         await this.authRepository.createSession(

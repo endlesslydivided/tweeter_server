@@ -39,7 +39,6 @@ export class DialogController {
   deleteDialog(@Param("id") id: string) {
     return this.dialogsService.deleteDialog(id);
   }
-
   
   @ApiOperation({ summary: "Get a dialog" })
   @ApiOkResponse({ type: Dialog })

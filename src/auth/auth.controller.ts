@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, forwardRef, Get, HttpStatus, Inject, Param, Post, Query, Req, Res, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
-import { ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Response } from "express";
 import { Transaction } from "sequelize";
 import { TransactionInterceptor } from "src/transactions/transaction.interceptor";
@@ -25,6 +25,7 @@ export class AuthController {
     private authService: AuthService) {
     }
 
+    @ApiCookieAuth("refreshToken")
     @ApiOperation({ summary: "Refresh access and refresh tokens" })
     @ApiOkResponse({ schema: {type:'object',properties:{'accessToken':{type: 'string'},'refreshToken':{type: 'string'}}}})
     @ApiBody({ type: RefreshTokensDTO })
@@ -50,6 +51,7 @@ export class AuthController {
         return this.authService.signUp(createUserDTO);
     }
 
+    @ApiCookieAuth("accessToken")
     @ApiOperation({ summary: "Delete all user sessions" })
     @UseGuards(AuthJWTGuard)
     @Delete('/sessions')
@@ -58,6 +60,7 @@ export class AuthController {
         return this.authService.deleteAllSessions(currentUser);
     }
 
+    @ApiCookieAuth("accessToken")
     @ApiOperation({ summary: "Delete a user session" })
     @UseGuards(AuthJWTGuard)
     @Delete('/sessions/:id')
@@ -66,6 +69,7 @@ export class AuthController {
         return this.authService.deleteSession(id,currentUser);
     }
 
+    @ApiCookieAuth("accessToken")
     @ApiOperation({ summary: "Get all user sessions" })
     @UseGuards(AuthJWTGuard)
     @Get('/sessions')
@@ -92,6 +96,7 @@ export class AuthController {
 
     }
 
+    @ApiCookieAuth("refreshToken")
     @ApiOperation({ summary: "SignOut a user" })
     @Post('/signOut')
     async signOut(@RefreshTokenArg() refreshSession: string,@Res() response: Response): Promise<void> 
@@ -113,6 +118,7 @@ export class AuthController {
         res.location(`${process.env.REACT_SERVER_URI}/login/success`).sendStatus(HttpStatus.TEMPORARY_REDIRECT); 
     }
 
+    @ApiCookieAuth("accessToken")
     @ApiOperation({ summary: "Get current user data" })
     @ApiCreatedResponse({ type: User })
     @UseGuards(AuthJWTGuard)

@@ -95,8 +95,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   {
     const auth = client.handshake.auth;
     
+    //room to get notified about a particular dialog action for a particular user
     if(auth.dialogId && auth.id)    client.join(auth.dialogId.toString() + auth.id.toString());
+    //room to get notified about a particular dialog action
     if(auth.dialogId)      client.join(auth.dialogId.toString())
+    //room to get notified about any action for a particular user
     if(auth.id)      client.join(auth.id.toString())
 
     this.logger.log(`Client connected: ${client.id}`);
