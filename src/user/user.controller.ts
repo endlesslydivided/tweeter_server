@@ -2,7 +2,6 @@ import { Body, Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/com
 import { Delete, Post } from '@nestjs/common/decorators';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthJWTGuard } from 'src/auth/guards/auth.guard';
-import { FilterUserParams } from 'src/requestFeatures/filterUser.params';
 import RequestParameters from 'src/requestFeatures/request.params';
 import { LikedTweet } from 'src/tweet/likedTweet.model';
 import { SavedTweet } from 'src/tweet/savedTweet.model';
@@ -28,7 +27,7 @@ export class UserController {
     @ApiOperation({ summary: "Get paged users" })
     @ApiOkResponse({ type: "{rows:User[],count:number}" })
     @Get()
-    getUsers(@Query() filters: FilterUserParams) 
+    getUsers(@Query() filters: RequestParameters) 
     {
       return this.userService.getUsers(filters);
     }

@@ -14,10 +14,4 @@ export default class RequestParameters
     @Min(1) 
     @IsNotEmpty({message:"Page param must not be empty"})
     public page:number = 1;
-
-    @IsOptional()
-    public orderBy: Array<Array<string>>;
-
-    @IsOptional()
-    public fields:string[]; 
 }
