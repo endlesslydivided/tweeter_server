@@ -43,7 +43,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"email\": \"bubilda2002@gmail.com\",\r\n    \"password\": \"123456789\",\r\n    \"fingerprint\": \"somefingerprint\"\r\n}",
+							"raw": "{\r\n    \"email\": \"sashakovalev2002@hotmail.com\",\r\n    \"password\": \"123456789\",\r\n    \"fingerprint\": \"somefingerprint\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -110,7 +110,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"fingerprint\":\"somefingerprint\"\r\n}",
+							"raw": "{\r\n    \"fingerprint\": \"somefingerprint\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -283,7 +283,7 @@
 								},
 								{
 									"key": "text",
-									"value": "Hi everyone!",
+									"value": "Hi everyone! AGAIN",
 									"type": "text"
 								},
 								{
@@ -350,14 +350,13 @@
 									"key": "files",
 									"type": "file",
 									"src": [
-										"/D:/_ALEX/Всякое/01udyHZxyTg.jpg",
-										"/D:/_ALEX/Всякое/4JFyX9GIMQs.jpg",
-										"/D:/_ALEX/Всякое/9_0s-pTQlH8.jpg"
+										"/D:/_ALEX/Всякое/d5ABR1G4ZUY.jpg",
+										"/D:/_ALEX/Всякое/Fi6RWKnIRIg.jpg"
 									]
 								},
 								{
 									"key": "text",
-									"value": "I commented your tweet!",
+									"value": "I commented my another!",
 									"type": "text"
 								},
 								{
@@ -377,17 +376,17 @@
 								},
 								{
 									"key": "parentRecordAuthorId",
-									"value": "",
+									"value": "{{CURRENT_USER_ID}}",
 									"type": "text"
 								},
 								{
 									"key": "parentRecordId",
-									"value": "",
+									"value": "8639e87a-7691-492a-b901-fb8ffdc9bdb8",
 									"type": "text"
 								},
 								{
 									"key": "description",
-									"value": "My kitties",
+									"value": "Comment to your kitties",
 									"type": "text"
 								}
 							]
@@ -471,12 +470,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{API_URL}}/subscribtions",
+							"raw": "{{API_URL}}/subscriptions",
 							"host": [
 								"{{API_URL}}"
 							],
 							"path": [
-								"subscribtions"
+								"subscriptions"
 							]
 						}
 					},
@@ -559,13 +558,12 @@
 							}
 						],
 						"url": {
-							"raw": "{{API_URL}}/users/?page=1&limit=10",
+							"raw": "{{API_URL}}/users?page=1&limit=10",
 							"host": [
 								"{{API_URL}}"
 							],
 							"path": [
-								"users",
-								""
+								"users"
 							],
 							"query": [
 								{
@@ -623,15 +621,55 @@
 							}
 						],
 						"url": {
-							"raw": "{{API_URL}}/users/:id/subscriptions/?page=1&limit=10",
+							"raw": "{{API_URL}}/users/:id/subscriptions?page=1&limit=10",
 							"host": [
 								"{{API_URL}}"
 							],
 							"path": [
 								"users",
 								":id",
-								"subscriptions",
-								""
+								"subscriptions"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{CURRENT_USER_ID}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user's dialogs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/users/:id/dialogs?page=1&limit=10",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"users",
+								":id",
+								"dialogs"
 							],
 							"query": [
 								{
@@ -665,15 +703,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{API_URL}}/users/:id/followers/?page=1&limit=10",
+							"raw": "{{API_URL}}/users/:id/followers?page=1&limit=10",
 							"host": [
 								"{{API_URL}}"
 							],
 							"path": [
 								"users",
 								":id",
-								"followers",
-								""
+								"followers"
 							],
 							"query": [
 								{
@@ -707,15 +744,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{API_URL}}/users/:id/likedTweets/?page=1&limit=10",
+							"raw": "{{API_URL}}/users/:id/likedTweets?page=1&limit=10",
 							"host": [
 								"{{API_URL}}"
 							],
 							"path": [
 								"users",
 								":id",
-								"likedTweets",
-								""
+								"likedTweets"
 							],
 							"query": [
 								{
@@ -790,15 +826,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{API_URL}}/users/:id/tweets/?page=1&limit=10",
+							"raw": "{{API_URL}}/users/:id/tweets?page=1&limit=10",
 							"host": [
 								"{{API_URL}}"
 							],
 							"path": [
 								"users",
 								":id",
-								"tweets",
-								""
+								"tweets"
 							],
 							"query": [
 								{
@@ -813,7 +848,7 @@
 							"variable": [
 								{
 									"key": "id",
-									"value": "72b4d98f-0ed2-4495-84ee-d4832f58ddb6"
+									"value": "{{CURRENT_USER_ID}}"
 								}
 							]
 						}
@@ -873,15 +908,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{API_URL}}/users/:id/media/?page=1&limit=10",
+							"raw": "{{API_URL}}/users/:id/media?page=1&limit=10",
 							"host": [
 								"{{API_URL}}"
 							],
 							"path": [
 								"users",
 								":id",
-								"media",
-								""
+								"media"
 							],
 							"query": [
 								{
@@ -915,15 +949,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{API_URL}}/users/:id/followingRequests/?page=1&limit=10",
+							"raw": "{{API_URL}}/users/:id/followingRequests?page=1&limit=10",
 							"host": [
 								"{{API_URL}}"
 							],
 							"path": [
 								"users",
 								":id",
-								"followingRequests",
-								""
+								"followingRequests"
 							],
 							"query": [
 								{
@@ -957,15 +990,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{API_URL}}/users/:id/followersRequests/?page=1&limit=10",
+							"raw": "{{API_URL}}/users/:id/followersRequests?page=1&limit=10",
 							"host": [
 								"{{API_URL}}"
 							],
 							"path": [
 								"users",
 								":id",
-								"followersRequests",
-								""
+								"followersRequests"
 							],
 							"query": [
 								{
@@ -1140,6 +1172,154 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "DIALOGS",
+			"item": [
+				{
+					"name": "Create dialog",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"New Dialog!\",\r\n    \"creatorUserId\": \"{CURRENT_USER_ID}}\",\r\n    \"companionUserId\": \"2fb37af7-a8e7-4de5-a8a0-800b0afe0c42\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_URL}}/dialogs",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"dialogs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update dialog",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{API_URL}}/dialogs/:id",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"dialogs",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete dialog",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/dialogs/:id",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"dialogs",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get message by dialog",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{API_URL}}/dialogs/:id/messages?page=1&limit=10",
+							"host": [
+								"{{API_URL}}"
+							],
+							"path": [
+								"dialogs",
+								":id",
+								"messages"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"event": [
@@ -1170,15 +1350,15 @@
 		},
 		{
 			"key": "ACCESS_TOKEN",
-			"value": "accessToken=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyZmIzN2FmNy1hOGU3LTRkZTUtYThhMC04MDBiMGFmZTBjNDIiLCJlbWFpbCI6ImJ1YmlsZGEyMDAyQGdtYWlsLmNvbSIsImlhdCI6MTY3Mzg4NzEzMCwiZXhwIjoxNjczODkwNzMwfQ.NNoyt8GFUX6Exu_7kCXXtUEFsqTjzH53CG7Mpf2Vr1WOGzVbZk3VWgYcWG0zDuQ7OabrdUewieIPB4HNMYqjHss13hWRoihwNunfHRuNoqbP8EB2l5M0tFazcqEBL3BjZK_qy6jLp-YN7OkcP4P2rd-HRlnms25HbpSBhAwNekM; Path=/; Secure; HttpOnly; Expires=Mon, 16 Jan 2023 17:38:50 GMT;"
+			"value": "accessToken=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3MmI0ZDk4Zi0wZWQyLTQ0OTUtODRlZS1kNDgzMmY1OGRkYjYiLCJlbWFpbCI6InNhc2hha292YWxldjIwMDJAaG90bWFpbC5jb20iLCJpYXQiOjE2NzQwNDc5NTEsImV4cCI6MTY3NDA1MTU1MX0.K-aYR8pZnl2TrhN9k2If9ViwamRzUm-q_Yw0WVXpIAudtNw_FXABaFOFcCRCL9a1xRHKHUrBRzw8HpVfJ-MWgdph3FSn0l-1HIFCmNKCLXJVtBXUcOnCO6BkiHaLdamJw4uY0oUl9qoeBRyRKo4iXv-OHQw3L1AI-KfOLe9jxa8; Path=/; Secure; HttpOnly; Expires=Wed, 18 Jan 2023 14:19:11 GMT;"
 		},
 		{
 			"key": "REFRESH_TOKEN",
-			"value": "refreshToken=1401a240-d582-4555-a33b-61dbc317ab7d; Path=/; Secure; HttpOnly; Expires=Mon, 23 Jan 2023 16:38:50 GMT;"
+			"value": "refreshToken=aeb3853e-5e30-4386-8a11-f6b15d972bc1; Path=/; Secure; HttpOnly; Expires=Wed, 25 Jan 2023 09:55:23 GMT;"
 		},
 		{
 			"key": "CURRENT_USER_ID",
-			"value": "2fb37af7-a8e7-4de5-a8a0-800b0afe0c42",
+			"value": "72b4d98f-0ed2-4495-84ee-d4832f58ddb6",
 			"type": "string"
 		}
 	]
