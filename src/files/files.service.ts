@@ -23,7 +23,7 @@ export class FilesService {
     } 
     catch (error) 
     {
-      this.logger.error(`An error occured during file writing: ${error}`);
+      this.logger.error(`An error occured during file writing: ${error.message}`);
       throw new InternalServerErrorException("An error occured during file writing");
     }
   }
@@ -43,7 +43,7 @@ export class FilesService {
       }
     } 
     catch (error) {
-      this.logger.error(`An error occured during file reading: ${error}`);
+      this.logger.error(`An error occured during file reading: ${error.message}`);
       throw new InternalServerErrorException("An error occured during file reading");
     }
   }

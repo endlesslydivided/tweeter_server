@@ -16,7 +16,7 @@ export class MessageService {
     async createMessage(dto: CreateMessageDto) 
     {   
       const message =  await this.messageRepository.create(dto, {returning:true}).catch((error) => {
-        this.logger.error(`Message is not created: ${error}`);
+        this.logger.error(`Message is not created: ${error.message}`);
         throw new InternalServerErrorException("Message is not created.Internal server error");
       });
       return message;
@@ -25,7 +25,7 @@ export class MessageService {
     async updateMessage(id: string, dto: UpdateMessageDto) {
 
       const message = await this.messageRepository.update(dto, { where: { id },returning:true }).catch((error) => {
-        this.logger.error(`Message is not updated: ${error}`);
+        this.logger.error(`Message is not updated: ${error.message}`);
         throw new InternalServerErrorException("Message is not updated.Internal server error");
       });
   

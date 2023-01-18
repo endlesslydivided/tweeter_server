@@ -19,7 +19,7 @@ export class SubscriptionService {
         return await this.subsRepository.findOrCreate({where:{[Op.and]:{...dto}},defaults:dto,transaction,returning:true})
         .catch((error) =>
         {
-            this.logger.error(`Subscription is not created: ${error}`);
+            this.logger.error(`Subscription is not created: ${error.message}`);
             throw new InternalServerErrorException('Subscription is not created. Internal server error.')
         });
     }
@@ -40,7 +40,7 @@ export class SubscriptionService {
         const subscription = await this.subsRepository.findByPk(id);
         await subscription.update(dto).catch((error) =>
         {
-            this.logger.error(`Subscription is not updated: ${error}`);
+            this.logger.error(`Subscription is not updated: ${error.message}`);
             throw new InternalServerErrorException('Subscription is not updated. Internal server error.')
         });;
 

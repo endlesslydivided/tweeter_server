@@ -110,8 +110,8 @@ export class UserService {
       )
       .then(result =>result.map((x:{id:string}) => x.id))
       .catch((error) => {
-        this.logger.error(`User liked tweets are not found: ${error}`);
-        throw new InternalServerErrorException("User liked tweets are not found. Internal server error");
+        this.logger.error(`User liked tweets are not found: ${error.message}`);
+        throw new InternalServerErrorException("User liked tweets are not found. Internal server error.");
       });
 
       const rows = await this.tweetRepository.findAll({
@@ -136,8 +136,8 @@ export class UserService {
       )
       .then(result =>result.map((x:{id:string}) => x.id))
       .catch((error) => {
-        this.logger.error(`User saved tweets are not found: ${error}`);
-        throw new InternalServerErrorException("User saved tweets are not found. Internal server error");
+        this.logger.error(`User saved tweets are not found: ${error.message}`);
+        throw new InternalServerErrorException("User saved tweets are not found. Internal server error.");
       });
 
       const rows = await this.tweetRepository.findAll({
@@ -163,8 +163,8 @@ export class UserService {
       )
       .then(result =>result.map((x:{id:string}) => x.id))
       .catch((error) => {
-        this.logger.error(`User tweets are not found: ${error}`);
-        throw new InternalServerErrorException("User tweets are not found. Internal server error");
+        this.logger.error(`User tweets are not found: ${error.message}`);
+        throw new InternalServerErrorException("User tweets are not found. Internal server error.");
       });
 
       const rows = await this.tweetRepository.findAll({
@@ -188,8 +188,8 @@ export class UserService {
       )
       .then((result:Array<{count:number}>) => result[0].count)
       .catch((error) => {
-        this.logger.error(`User feed tweets are not found: ${error}`);
-        throw new InternalServerErrorException("User feed tweets are not found. Internal server error");
+        this.logger.error(`User feed tweets are not found: ${error.message}`);
+        throw new InternalServerErrorException("User feed tweets are not found. Internal server error.");
       });
 
       const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_feed_tweets_ids(:authorId,:offset,:limit) "id"`,
@@ -200,8 +200,8 @@ export class UserService {
       )
       .then(result =>result.map((x:{id:string}) => x.id))
       .catch((error) => {
-        this.logger.error(`User feed tweets are not found: ${error}`);
-        throw new InternalServerErrorException("User feed tweets are not found. Internal server error");
+        this.logger.error(`User feed tweets are not found: ${error.message}`);
+        throw new InternalServerErrorException("User feed tweets are not found. Internal server error.");
       });
 
       const rows = await this.tweetRepository.findAll({
@@ -238,9 +238,9 @@ export class UserService {
             order: [["createdAt", "DESC"]]
         })
         .catch((error) => {
-            this.logger.error(`Requests are not found: ${error}`);
+            this.logger.error(`Requests are not found: ${error.message}`);
 
-            throw new InternalServerErrorException("Requests are not found. Internal server error");
+            throw new InternalServerErrorException("Requests are not found. Internal server error.");
         });
 
         return requests;
@@ -269,8 +269,8 @@ export class UserService {
             order: [["createdAt", "DESC"]]
         })
         .catch((error) => {
-            this.logger.error(`Requests are not found: ${error}`);
-            throw new InternalServerErrorException("Requests are not found. Internal server error");
+            this.logger.error(`Requests are not found: ${error.message}`);
+            throw new InternalServerErrorException("Requests are not found. Internal server error.");
         });
 
         return requests;
@@ -301,8 +301,8 @@ export class UserService {
           order: [["createdAt", "DESC"]]
         })
         .catch((error) => {
-          this.logger.error(`Followers are not found: ${error}`);
-          throw new InternalServerErrorException("Followers are not found. Internal server error/");
+          this.logger.error(`Followers are not found: ${error.message}`);
+          throw new InternalServerErrorException("Followers are not found. Internal server error.");
         });
       return result;
     }
@@ -331,8 +331,8 @@ export class UserService {
           order: [["createdAt", "DESC"]]
         })
         .catch((error) => {
-          this.logger.error(`Subscriptions are not found: ${error}`);
-          throw new InternalServerErrorException("Subscriptions are not found. Internal server error",{cause:error});
+          this.logger.error(`Subscriptions are not found: ${error.message}`);
+          throw new InternalServerErrorException("Subscriptions are not found. Internal server error.",{cause:error});
         });
   
       return result;
@@ -361,8 +361,8 @@ export class UserService {
           order: [["createdAt", "DESC"]]
         })
         .catch((error) => {
-          this.logger.error(`Dialogs are not found: ${error}`);
-          throw new InternalServerErrorException("Dialogs are not found. Internal server error");
+          this.logger.error(`Dialogs are not found: ${error.message}`);
+          throw new InternalServerErrorException("Dialogs are not found. Internal server error.");
         });
       return dialogs;
     }
@@ -373,7 +373,7 @@ export class UserService {
         return await this.savedTweetRepository.create({userId,tweetId},{returning:true})
         .catch((error) =>
         {
-          this.logger.error(`Tweet is not saved: ${error}`);
+          this.logger.error(`Tweet is not saved: ${error.message}`);
             throw new InternalServerErrorException('Tweet is not saved. Internal server error.')
         });
     }
@@ -389,7 +389,7 @@ export class UserService {
         return await this.likedTweetRepository.create({userId,tweetId},{returning:true})
         .catch((error) =>
         {
-          this.logger.error(`Tweet is not liked: ${error}`);
+          this.logger.error(`Tweet is not liked: ${error.message}`);
           throw new InternalServerErrorException('Tweet is not liked. Internal server error.')
         });
     }

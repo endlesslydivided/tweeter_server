@@ -24,15 +24,15 @@ export class TweetService {
         const tweet = await this.tweetRepository.create(dto,{transaction,returning:true})
         .catch((error) =>
         {
-            this.logger.error(`Tweet is not created:${error}`);
+            this.logger.error(`Tweet is not created:${error.message}`);
             throw new InternalServerErrorException('Tweet cannot be created. Internal server error.')
         });
 
         const media= await this.mediaService.createTweetMedia(files, tweet.id,transaction)
         .catch((error) => 
         {
-            this.logger.error(`Tweet is not created:${error}`);
-            throw new InternalServerErrorException("Error occured during media creation. Internal server error");
+            this.logger.error(`Tweet is not created:${error.message}`);
+            throw new InternalServerErrorException("Error occured during media creation. Internal server error.");
         });   
 
         return tweet;

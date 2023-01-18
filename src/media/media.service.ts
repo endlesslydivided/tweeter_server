@@ -22,16 +22,16 @@ export class MediaService {
             const path = await this.filesService.createFile(file)
             .catch(error => 
               { 
-                this.logger.error(`Error occured during file writing: ${error}`);
-                throw new InternalServerErrorException("Error occured during file writing. Internal server error")
+                this.logger.error(`Error occured during file writing: ${error.message}`);
+                throw new InternalServerErrorException("Error occured during file writing. Internal server error.")
               });;
             const {originalname:originalName,mimetype:type} = file;
 
             const attachment = await this.mediaRepository.create({ path, tweetRecordId,originalName,type }, { transaction })
             .catch(error => 
             { 
-              this.logger.error(`Error occured during creating media entry: ${error}`);
-              throw new InternalServerErrorException("Error occured during creating media entry. Internal server error")
+              this.logger.error(`Error occured during creating media entry: ${error.message}`);
+              throw new InternalServerErrorException("Error occured during creating media entry. Internal server error.")
             });
             return attachment;          
           }
@@ -43,8 +43,8 @@ export class MediaService {
         const path = await this.filesService.createFile(file)
         .catch(error => 
           { 
-            this.logger.error(`Error occured during file writing: ${error}`);
-            throw new InternalServerErrorException("Error occured during file writing. Internal server error")
+            this.logger.error(`Error occured during file writing: ${error.message}`);
+            throw new InternalServerErrorException("Error occured during file writing. Internal server error.")
           });
 
         const {originalname:originalName,mimetype:type} = file;
@@ -52,8 +52,8 @@ export class MediaService {
         const userPhoto = await this.mediaRepository.create({ path, originalName,type }, { transaction })
         .catch(error => 
         { 
-          this.logger.error(`Error occured during creating media entry: ${error}`);
-          throw new InternalServerErrorException("Error occured during creating media entry. Internal server error")
+          this.logger.error(`Error occured during creating media entry: ${error.message}`);
+          throw new InternalServerErrorException("Error occured during creating media entry. Internal server error.")
         });
         return userPhoto;              
     }

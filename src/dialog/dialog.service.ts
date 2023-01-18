@@ -36,19 +36,19 @@ export class DialogService {
 
       if(subscriptionsCount < 2)
       {
-        this.logger.error(`Only mutually subscribed users can exchange messages: ${JSON.stringify(dto)}`);
+        this.logger.error(`Only mutually subscribed users can exchange messages.`);
 
         throw new ForbiddenException("Only mutually subscribed users can exchange messages.")
       }
 
       const dialog = await this.dialogRepository.findOrCreate({where:{[Op.and]:{...dto}},defaults:dto,returning:true,transaction}).catch((error) => {
-        this.logger.error(`Dialog is not created: ${error}`);
-        throw new InternalServerErrorException("Dialog is not created. Internal server error");
+        this.logger.error(`Dialog is not created: ${error.message}`);
+        throw new InternalServerErrorException("Dialog is not created. Internal server error.");
       });
 
       await dialog[0].$set('users',[creatorUserId,companionUserId],{transaction}).catch((error) => {
-        this.logger.error(`Dialog is not created: ${error}`);
-        throw new InternalServerErrorException("Dialog is not created. Internal server error");
+        this.logger.error(`Dialog is not created: ${error.message}`);
+        throw new InternalServerErrorException("Dialog is not created. Internal server error.");
       });
     
       return dialog[0];
@@ -85,8 +85,8 @@ export class DialogService {
           order: [["createdAt", "DESC"]]
       }).catch((error) =>
       {
-        this.logger.error(`Messages are not found: ${error}`);
-        throw new InternalServerErrorException("Messages are not found. Internal server error");
+        this.logger.error(`Messages are not found: ${error.message}`);
+        throw new InternalServerErrorException("Messages are not found. Internal server error.");
       });
       return messages;
     }
