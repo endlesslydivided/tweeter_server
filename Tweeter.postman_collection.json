@@ -558,7 +558,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{API_URL}}/users?page=1&limit=10",
+							"raw": "{{API_URL}}/users?page=1&limit=100&orderBy=updatedAt&orderDirection=asc",
 							"host": [
 								"{{API_URL}}"
 							],
@@ -572,7 +572,15 @@
 								},
 								{
 									"key": "limit",
-									"value": "10"
+									"value": "100"
+								},
+								{
+									"key": "orderBy",
+									"value": "updatedAt"
+								},
+								{
+									"key": "orderDirection",
+									"value": "asc"
 								}
 							]
 						}
@@ -1023,7 +1031,28 @@
 					"name": "Update user",
 					"request": {
 						"method": "PUT",
-						"header": [],
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/D:/_ALEX/Всякое/01udyHZxyTg.jpg"
+								},
+								{
+									"key": "firstname",
+									"value": "newname1",
+									"type": "text"
+								}
+							]
+						},
 						"url": {
 							"raw": "{{API_URL}}/users/:id",
 							"host": [
@@ -1036,7 +1065,7 @@
 							"variable": [
 								{
 									"key": "id",
-									"value": null
+									"value": "{{CURRENT_USER_ID}}"
 								}
 							]
 						}
@@ -1189,7 +1218,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\":\"New Dialog!\",\r\n    \"creatorUserId\": \"{CURRENT_USER_ID}}\",\r\n    \"companionUserId\": \"2fb37af7-a8e7-4de5-a8a0-800b0afe0c42\"\r\n}",
+							"raw": "{\r\n    \"name\":\"New Dialog!\",\r\n    \"creatorUserId\": \"{{CURRENT_USER_ID}}\",\r\n    \"companionUserId\": \"2fb37af7-a8e7-4de5-a8a0-800b0afe0c42\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1350,11 +1379,11 @@
 		},
 		{
 			"key": "ACCESS_TOKEN",
-			"value": "accessToken=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3MmI0ZDk4Zi0wZWQyLTQ0OTUtODRlZS1kNDgzMmY1OGRkYjYiLCJlbWFpbCI6InNhc2hha292YWxldjIwMDJAaG90bWFpbC5jb20iLCJpYXQiOjE2NzQwNDc5NTEsImV4cCI6MTY3NDA1MTU1MX0.K-aYR8pZnl2TrhN9k2If9ViwamRzUm-q_Yw0WVXpIAudtNw_FXABaFOFcCRCL9a1xRHKHUrBRzw8HpVfJ-MWgdph3FSn0l-1HIFCmNKCLXJVtBXUcOnCO6BkiHaLdamJw4uY0oUl9qoeBRyRKo4iXv-OHQw3L1AI-KfOLe9jxa8; Path=/; Secure; HttpOnly; Expires=Wed, 18 Jan 2023 14:19:11 GMT;"
+			"value": "accessToken=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3MmI0ZDk4Zi0wZWQyLTQ0OTUtODRlZS1kNDgzMmY1OGRkYjYiLCJlbWFpbCI6InNhc2hha292YWxldjIwMDJAaG90bWFpbC5jb20iLCJpYXQiOjE2NzQxMTgzMTEsImV4cCI6MTY3NDEyMTkxMX0.Hx_5EhqI-6_QKiri5Ek2o79E5mTrIQ8YkJHqfE9tnLuj5NC9A9BPbFwSU-N2wPrZC_qWeUkrLc0LjO7h3lGZGrqLR3tIaJHAXa7Zlo-o6v6HAkoOiMZGaQGI9w_NK5ISACgpelYypkk7spgrxYvN0WPRfCXyVZIzyOb6m1xzZR0; Path=/; Secure; HttpOnly; Expires=Thu, 19 Jan 2023 09:51:50 GMT;"
 		},
 		{
 			"key": "REFRESH_TOKEN",
-			"value": "refreshToken=aeb3853e-5e30-4386-8a11-f6b15d972bc1; Path=/; Secure; HttpOnly; Expires=Wed, 25 Jan 2023 09:55:23 GMT;"
+			"value": "refreshToken=c02ad7bd-39f0-4a87-a4ba-1f03e60516dc; Path=/; Secure; HttpOnly; Expires=Thu, 26 Jan 2023 07:51:03 GMT;"
 		},
 		{
 			"key": "CURRENT_USER_ID",

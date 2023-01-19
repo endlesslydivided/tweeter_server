@@ -2,10 +2,10 @@ import { ForbiddenException, Injectable, InternalServerErrorException, Logger, N
 import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
 import { Transaction } from 'sequelize';
+import DBQueryParameters from 'src/requestFeatures/dbquery.params copy';
 import { Subscription } from 'src/subscription/subscription.model';
 import { Media } from '../media/media.model';
 import { Message } from '../message/message.model';
-import RequestParameters from '../requestFeatures/request.params';
 import { User } from '../user/user.model';
 import { Dialog } from './dialog.model';
 import { CreateDialogDto } from './dto/createDialog.dto';
@@ -75,14 +75,12 @@ export class DialogService {
       return await this.dialogRepository.destroy({ where: { id } });
     }
 
-    async getMessagesByDialog(dialogId: string, filters:RequestParameters) {
+    async getMessagesByDialog(dialogId: string, filters:DBQueryParameters) {
   
       const messages = await this.messageRepository.findAndCountAll({
           where:{dialogId},
           include:[{model: User,include:[{model:Media}]}],
-          limit: filters.limit,
-          offset:filters.page *  filters.limit -  filters.limit,
-          order: [["createdAt", "DESC"]]
+          ...filters
       }).catch((error) =>
       {
         this.logger.error(`Messages are not found: ${error.message}`);

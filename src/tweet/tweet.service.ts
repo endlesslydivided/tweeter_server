@@ -2,7 +2,7 @@ import {  forwardRef, Inject, Injectable, InternalServerErrorException,Logger,No
 import { BadRequestException } from '@nestjs/common/exceptions';
 import { InjectModel } from '@nestjs/sequelize';
 import { Transaction } from 'sequelize';
-import { MediaService } from 'src/media/media.service';
+import { MediaService } from '../media/media.service';
 import { CreateTweetDTO } from './dto/createTweet.dto';
 import { Tweet } from './tweet.model';
 
@@ -28,16 +28,18 @@ export class TweetService {
             throw new InternalServerErrorException('Tweet cannot be created. Internal server error.')
         });
 
-        const media= await this.mediaService.createTweetMedia(files, tweet.id,transaction)
-        .catch((error) => 
+        if(files.length !== 0)
         {
-            this.logger.error(`Tweet is not created:${error.message}`);
-            throw new InternalServerErrorException("Error occured during media creation. Internal server error.");
-        });   
-
+            await this.mediaService.createTweetMedia(files, tweet.id,transaction)
+            .catch((error) => 
+            {
+                this.logger.error(`Tweet is not created:${error.message}`);
+                throw new InternalServerErrorException("Error occured during media creation. Internal server error.");
+            });  
+        }
+        
         return tweet;
-            
-      
+             
     }
 
     async getTweetById(id: string) 

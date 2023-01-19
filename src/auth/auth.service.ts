@@ -114,7 +114,7 @@ export class AuthService {
             throw new BadRequestException("Invalid token or email is already confirmed");
         }
 
-        const user = await this.userService.createUser(tempUser);
+        const user = await this.userService.createUser({...tempUser,emailConfirmed:true});
         await this.authRepository.deleteTemporaryUser(emailToken);
         return user;
         

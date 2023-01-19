@@ -6,7 +6,7 @@ export class UpdateUserDTO {
     @IsString({ message: "Должно быть строкой" })
     @Length(0, 50, { message: "Длина имени: до 50 символов" })
     @IsOptional()
-    firstName: string;
+    firstname: string;
   
     @ApiProperty({ example: "Kovalyov", description: "User's lastname" })
     @IsString({ message: "Должно быть строкой" })

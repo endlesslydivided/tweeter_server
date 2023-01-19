@@ -1,7 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Transaction } from 'sequelize';
-import RequestParameters from '../requestFeatures/request.params';
 import { TransactionInterceptor } from '../transactions/transaction.interceptor';
 import { TransactionParam } from '../transactions/transactionParam.decorator';
 import { DialogService } from './dialog.service';
@@ -9,6 +8,8 @@ import { Dialog } from './dialog.model';
 import { CreateDialogDto } from './dto/createDialog.dto';
 import { UpdateDialogDto } from './dto/updateDialog.dto';
 import { AuthJWTGuard } from '../auth/guards/auth.guard';
+import { QueryParamsPipe } from '../requestFeatures/queryParams.pipe';
+import QueryParameters from '../requestFeatures/query.params';
 
 @ApiTags("Dialogs")
 @Controller("dialogs")
@@ -50,7 +51,7 @@ export class DialogController {
   @ApiOperation({ summary: "Get paged dialog's messages" })
   @ApiOkResponse({ type: "{rows:Message[],count:number}" })
   @Get("/:id/messages")
-  getPagedMessageByDialog(@Param("id") dialogId: string,@Query() filters: RequestParameters) {
+  getPagedMessageByDialog(@Param("id") dialogId: string,@Query(new QueryParamsPipe()) filters: QueryParameters) {
     return this.dialogsService.getMessagesByDialog(dialogId, filters);
   }
 }

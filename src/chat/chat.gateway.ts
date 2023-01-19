@@ -3,7 +3,7 @@ import {SubscribeMessage,WebSocketGateway,OnGatewayInit,WebSocketServer,OnGatewa
 import { Socket, Server } from 'socket.io';
 import { DialogService } from 'src/dialog/dialog.service';
 import { MessageService } from 'src/message/message.service';
-import RequestParameters from 'src/requestFeatures/request.params';
+import QueryParameters from 'src/requestFeatures/query.params';
 import { UserService } from 'src/user/user.service';
 import { AuthJWTGuard } from '../auth/guards/auth.guard';
 import { CreateMessageDto } from '../message/dto/createMessage.dto';
@@ -61,7 +61,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   @SubscribeMessage(ChatServerEvent.GetDialogMessages)
-  async handleGetDialogMessages(@MessageBody() body: any  & {dialogId:string,filters:RequestParameters}) 
+  async handleGetDialogMessages(@MessageBody() body: any  & {dialogId:string,filters:QueryParameters}) 
   {
     const messages = this.dialogsService.getMessagesByDialog(body.dialogId,body.filters);
     messages.then((messages) =>
@@ -71,7 +71,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   @SubscribeMessage(ChatServerEvent.GetDialogs)
-  async handleGetDialogs(@MessageBody() body: any & {userId:string,filters:RequestParameters}) 
+  async handleGetDialogs(@MessageBody() body: any & {userId:string,filters:QueryParameters}) 
   {
     const dialogs = this.userService.getDialogsByUser(body.userId,body.filters);
     dialogs.then((dialogs) =>

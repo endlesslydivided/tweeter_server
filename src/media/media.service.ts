@@ -25,6 +25,7 @@ export class MediaService {
                 this.logger.error(`Error occured during file writing: ${error.message}`);
                 throw new InternalServerErrorException("Error occured during file writing. Internal server error.")
               });;
+              
             const {originalname:originalName,mimetype:type} = file;
 
             const attachment = await this.mediaRepository.create({ path, tweetRecordId,originalName,type }, { transaction })

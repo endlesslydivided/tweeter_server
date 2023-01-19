@@ -1,16 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { InternalServerErrorException, NotFoundException } from '@nestjs/common/exceptions';
 import { InjectModel } from '@nestjs/sequelize';
-import { Op, QueryTypes } from 'sequelize';
-import { Dialog } from 'src/dialog/dialog.model';
-import { UserDialog } from 'src/dialog/userDialog.model';
-import { Media } from 'src/media/media.model';
-import { Message } from 'src/message/message.model';
-import RequestParameters from 'src/requestFeatures/request.params';
-import { Subscription } from 'src/subscription/subscription.model';
-import { LikedTweet } from 'src/tweet/likedTweet.model';
-import { SavedTweet } from 'src/tweet/savedTweet.model';
-import { Tweet } from 'src/tweet/tweet.model';
+import { Op, QueryTypes, Transaction } from 'sequelize';
+import { Dialog } from '../dialog/dialog.model';
+import { UserDialog } from '../dialog/userDialog.model';
+import { Media } from '../media/media.model';
+import { MediaService } from '../media/media.service';
+import { Message } from '../message/message.model';
+import DBQueryParameters from '../requestFeatures/dbquery.params copy';
+import QueryParameters from '../requestFeatures/query.params';
+import { Subscription } from '../subscription/subscription.model';
+import { LikedTweet } from '../tweet/likedTweet.model';
+import { SavedTweet } from '../tweet/savedTweet.model';
+import { Tweet } from '../tweet/tweet.model';
 import { CreateUserDTO } from './dto/createUser.dto';
 import { UpdateUserDTO } from './dto/updateUser.dto';
 import { User } from './user.model';
@@ -26,7 +28,8 @@ export class UserService {
                 @InjectModel(Dialog) private dialogRepository: typeof Dialog,
                 @InjectModel(Media) private mediaRepository: typeof Media,
                 @InjectModel(LikedTweet) private likedTweetRepository: typeof LikedTweet,
-                @InjectModel(SavedTweet) private savedTweetRepository: typeof SavedTweet)
+                @InjectModel(SavedTweet) private savedTweetRepository: typeof SavedTweet,
+                @Inject(forwardRef(() => MediaService)) private mediaService: MediaService)
     {}
 
     async createUser(dto: CreateUserDTO) 
@@ -60,20 +63,21 @@ export class UserService {
         return {user, followersCount, subscriptionsCount};
     }
 
-    async getUsers(filters: RequestParameters) 
-    {
-       
+    async getUsers(filters: DBQueryParameters) 
+    {    
         const users = await this.userRepository.findAndCountAll({
-            limit: filters.limit,
-            offset:filters.page *  filters.limit -  filters.limit,
+            ...filters, 
+            include: 
+              [
+                {model:Media}
+              ],
             subQuery: false,
-            order: [['createdAt','desc']],
             attributes:{exclude:['password','salt','accessFailedCount','emailConfirmed']}
         });
         return users;
     }
 
-    async updateUserById(id:string, dto: UpdateUserDTO) 
+    async updateUserById(file:Express.Multer.File,id:string, dto: UpdateUserDTO,transaction:Transaction) 
     {
         const user = await this.userRepository.findByPk(id);
 
@@ -83,28 +87,41 @@ export class UserService {
           throw new NotFoundException(`User is not found.`);
         }
 
+        if(file)
+        {
+            const media = await this.mediaService.createUserPhotoMedia(file, transaction)
+            .catch((error) => 
+            {
+                this.logger.error(`User media is not created:${error.message}`);
+                throw new InternalServerErrorException("Error occured during media creation. Internal server error.");
+            }); 
+            await media.$set('user',user);
+        }
 
-        return user.update(dto);
+        return await user.update(dto,{transaction});
     }
 
-    async getUserMedia(id:string,filters:RequestParameters)
+    async getUserMedia(id:string,filters : DBQueryParameters)
     {
         const media = await this.mediaRepository.findAndCountAll({
+          ...filters,
           distinct:true,
           include:[{model:Tweet,attributes:['id'], where:{authorId:id}}],
-          limit: filters.limit,
-          offset:filters.page *  filters.limit -  filters.limit
+          
         })
 
         return media;
     }
 
-    async getUserLikedTweets(id:string,filters:RequestParameters)
+    async getUserLikedTweets(id:string,filters : DBQueryParameters)
     {
       const count = await this.tweetRepository.count({where:{authorId:id,isComment:false}});
+
+      const {limit,offset} = filters;
+
       const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_liked_tweets_ids(:userId,:offset,:limit) "id"`,
         {
-          replacements: {userId:id,limit: filters.limit,offset:filters.page *  filters.limit -  filters.limit},
+          replacements: {userId:id,limit,offset},
           type: QueryTypes.SELECT,
         }
       )
@@ -125,12 +142,15 @@ export class UserService {
       return {count,rows};
     }
 
-    async getUserSavedTweets(id:string,filters:RequestParameters)
+    async getUserSavedTweets(id:string,filters : DBQueryParameters)
     {
       const count = await this.tweetRepository.count({where:{authorId:id,isComment:false}});
+      
+      const {limit,offset} = filters;
+
       const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_saved_tweets_ids(:userId,:offset,:limit) "id"`,
         {
-          replacements: {userId:id,limit: filters.limit,offset:filters.page *  filters.limit -  filters.limit},
+          replacements: {userId:id,limit,offset},
           type: QueryTypes.SELECT,
         }
       )
@@ -152,12 +172,15 @@ export class UserService {
     }
 
         
-    async getUserTweets(id:string,filters:RequestParameters)
+    async getUserTweets(id:string,filters : DBQueryParameters)
     {
       const count = await this.tweetRepository.count({where:{authorId:id,isComment:false}});
+      
+      const {limit,offset} = filters;
+
       const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_tweets_ids(:authorId,:offset,:limit) "id"`,
         {
-          replacements: {authorId:id,limit: filters.limit,offset:filters.page *  filters.limit -  filters.limit},
+          replacements: {authorId:id,limit,offset},
           type: QueryTypes.SELECT,
         }
       )
@@ -178,7 +201,7 @@ export class UserService {
       return {count,rows};
     }
 
-    async getUserFeed(id: string, filters:RequestParameters) 
+    async getUserFeed(id: string, filters : DBQueryParameters) 
     {
       const count = await this.tweetRepository.sequelize.query(`select get_user_feed_tweets_count(:userId) "count"`,
         {
@@ -192,9 +215,11 @@ export class UserService {
         throw new InternalServerErrorException("User feed tweets are not found. Internal server error.");
       });
 
+      const {limit,offset} = filters;
+
       const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_feed_tweets_ids(:authorId,:offset,:limit) "id"`,
         {
-          replacements: {authorId:id,limit: filters.limit,offset:filters.page *  filters.limit -  filters.limit},
+          replacements: {authorId:id,limit,offset},
           type: QueryTypes.SELECT,
         }
       )
@@ -215,12 +240,11 @@ export class UserService {
       return {count,rows};
     }
 
-    async getFollowersRequests(id: string,filters:RequestParameters) 
+    async getFollowersRequests(id: string,filters : DBQueryParameters) 
     {
         const requests = await  this.subsRepository.findAndCountAll(
         {
-            limit: filters.limit, 
-            offset:filters.page *  filters.limit -  filters.limit,
+            ...filters,
             where:
             {
                 subscribedUserId:  id,
@@ -234,8 +258,7 @@ export class UserService {
               [
                   {model:Media}
               ]
-            }],
-            order: [["createdAt", "DESC"]]
+            }]
         })
         .catch((error) => {
             this.logger.error(`Requests are not found: ${error.message}`);
@@ -246,12 +269,11 @@ export class UserService {
         return requests;
     }
 
-    async getFollowingRequests(id: string,filters:RequestParameters) 
+    async getFollowingRequests(id: string,filters : DBQueryParameters) 
     {
-        const requests = await  this.subsRepository.findAndCountAll(
+        const requests = await this.subsRepository.findAndCountAll(
         {
-            limit: filters.limit, 
-            offset:filters.page *  filters.limit -  filters.limit,
+            ...filters,
             where:
             {
                 subscriberId:  id,
@@ -265,8 +287,7 @@ export class UserService {
               [
                   {model:Media}
               ]
-            }],
-            order: [["createdAt", "DESC"]]
+            }]
         })
         .catch((error) => {
             this.logger.error(`Requests are not found: ${error.message}`);
@@ -277,13 +298,12 @@ export class UserService {
     }
 
 
-    async getUserFollowers(id: string,filters:RequestParameters) 
+    async getUserFollowers(id: string,filters : DBQueryParameters) 
     {
   
       const result = await this.subsRepository.findAndCountAll(
         {
-          limit: filters.limit, 
-          offset:filters.page *  filters.limit -  filters.limit,
+          ...filters,
           where:
           {
             subscribedUserId:  id,
@@ -297,8 +317,7 @@ export class UserService {
             [
               {model:Media}
             ]
-          }],
-          order: [["createdAt", "DESC"]]
+          }]
         })
         .catch((error) => {
           this.logger.error(`Followers are not found: ${error.message}`);
@@ -307,13 +326,12 @@ export class UserService {
       return result;
     }
 
-    async getUserSubscriptions(id: string,filters:RequestParameters) 
+    async getUserSubscriptions(id: string,filters : DBQueryParameters) 
     {
   
       const result = await this.subsRepository.findAndCountAll(
         {
-          limit: filters.limit, 
-          offset:filters.page *  filters.limit -  filters.limit,
+          ...filters,
           where:
           {
             subscriberId:  id,
@@ -327,8 +345,7 @@ export class UserService {
             [
               {model:Media}
             ]
-          }],
-          order: [["createdAt", "DESC"]]
+          }]
         })
         .catch((error) => {
           this.logger.error(`Subscriptions are not found: ${error.message}`);
@@ -339,11 +356,12 @@ export class UserService {
     }
 
     
-    async getDialogsByUser(userId: string, filters: RequestParameters) 
+    async getDialogsByUser(userId: string, filters: DBQueryParameters) 
     {
   
       const dialogs = await this.dialogRepository.findAndCountAll(
         {
+          ...filters,
           include:
             [
               { 
@@ -356,9 +374,6 @@ export class UserService {
                 model:UserDialog,attributes:['dialogId'],where:{userId}
               }
             ],
-          limit: filters.limit,
-          offset: filters.page *  filters.limit -  filters.limit,
-          order: [["createdAt", "DESC"]]
         })
         .catch((error) => {
           this.logger.error(`Dialogs are not found: ${error.message}`);

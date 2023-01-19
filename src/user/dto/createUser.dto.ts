@@ -32,6 +32,10 @@ export class CreateUserDTO {
   @IsEmail({}, { message: "Некорректный email" })
   email: string;
 
+  @ApiProperty({ example: "true", description: "Is user email confirmed?" })
+  @IsString({ message: "Должно быть строкой" })
+  emailConfirmed: boolean;
+
   @ApiProperty({ example: "12345", description: "User's password" })
   @IsString({ message: "Должно быть строкой" })
   @Length(8, 30, { message: "Длина пароля: от 8 до 30 символов" })

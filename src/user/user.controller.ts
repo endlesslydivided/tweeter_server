@@ -1,13 +1,18 @@
 import { Body, Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
-import { Delete, Post } from '@nestjs/common/decorators';
+import { Delete, Post, UploadedFile, UseInterceptors } from '@nestjs/common/decorators';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AuthJWTGuard } from 'src/auth/guards/auth.guard';
-import RequestParameters from 'src/requestFeatures/request.params';
-import { LikedTweet } from 'src/tweet/likedTweet.model';
-import { SavedTweet } from 'src/tweet/savedTweet.model';
+import { AuthJWTGuard } from '../auth/guards/auth.guard';
+import { QueryParamsPipe } from '../requestFeatures/queryParams.pipe';
+import { LikedTweet } from '../tweet/likedTweet.model';
+import { SavedTweet } from '../tweet/savedTweet.model';
 import { UpdateUserDTO } from './dto/updateUser.dto';
 import { User } from './user.model';
 import { UserService } from './user.service';
+import { TransactionInterceptor } from '../transactions/transaction.interceptor';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Transaction } from 'sequelize';
+import { TransactionParam } from '../transactions/transactionParam.decorator';
+import QueryParameters from '../requestFeatures/query.params';
 
 @ApiTags("Users")
 @Controller("users")
@@ -18,16 +23,20 @@ export class UserController {
   
     @ApiOperation({ summary: "User update" })
     @ApiOkResponse({ type: User })
+    @UseInterceptors(TransactionInterceptor,FileInterceptor('file'))
     @Put("/:id")
-    updateUser(@Body() dto: UpdateUserDTO,@Param("id") id: string) 
+    updateUser(@UploadedFile()file: Express.Multer.File,
+                @Body() dto: UpdateUserDTO,
+                @Param("id") id: string,
+                @TransactionParam() transaction: Transaction) 
     {
-      return this.userService.updateUserById(id,dto);
+      return this.userService.updateUserById(file,id,dto,transaction);
     }
   
     @ApiOperation({ summary: "Get paged users" })
     @ApiOkResponse({ type: "{rows:User[],count:number}" })
     @Get()
-    getUsers(@Query() filters: RequestParameters) 
+    getUsers(@Query(new QueryParamsPipe()) filters: QueryParameters) 
     {
       return this.userService.getUsers(filters);
     }
@@ -43,7 +52,7 @@ export class UserController {
     @ApiOperation({ summary: "Get paged user's subscriptions" })
     @ApiOkResponse({ type: "{rows:Subscription[],count:number}" })
     @Get("/:id/subscriptions")
-    getSubscriptionsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    getSubscriptionsByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters) 
     {
       return this.userService.getUserSubscriptions(id,filters);
     }
@@ -51,7 +60,7 @@ export class UserController {
     @ApiOperation({ summary: "Get paged user's followers" })
     @ApiOkResponse({ type: "{rows:Subscription[],count:number}" })
     @Get("/:id/followers")
-    getFollowersByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    getFollowersByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters) 
     {
       return this.userService.getUserFollowers(id,filters);
     }
@@ -59,7 +68,7 @@ export class UserController {
     @ApiOperation({ summary: "Get paged user's liked tweets" })
     @ApiOkResponse({ type: "{rows:Tweet[],count:number}" })
     @Get("/:id/likedTweets")
-    getLikedTweetByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    getLikedTweetByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters) 
     {
       return this.userService.getUserLikedTweets(id,filters);
     }
@@ -67,7 +76,7 @@ export class UserController {
     @ApiOperation({ summary: "Get paged user's saved tweets" })
     @ApiOkResponse({ type: "{rows:Tweet[],count:number}" })
     @Get("/:id/savedTweets")
-    getSavedTweetByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    getSavedTweetByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters) 
     {
       return this.userService.getUserSavedTweets(id,filters);
     }
@@ -75,7 +84,7 @@ export class UserController {
     @ApiOperation({ summary: "Get paged user's tweets" })
     @ApiOkResponse({ type: "{rows:Tweet[],count:number}" })
     @Get("/:id/tweets")
-    getTweetsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    getTweetsByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters) 
     {
       return this.userService.getUserTweets(id,filters);
     }
@@ -83,7 +92,7 @@ export class UserController {
     @ApiOperation({ summary: "Get paged user's feed" })
     @ApiOkResponse({ type: "{rows:Tweet[],count:number}" })
     @Get("/:id/feed")
-    getFeedByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    getFeedByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters) 
     {
       return this.userService.getUserFeed(id,filters);
     }
@@ -91,7 +100,7 @@ export class UserController {
     @ApiOperation({ summary: "Get paged user's media" })
     @ApiOkResponse({ type: "{rows:Media[],count:number}" })
     @Get("/:id/media")
-    getMediaByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    getMediaByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters) 
     {
       return this.userService.getUserMedia(id,filters);
     }
@@ -99,7 +108,7 @@ export class UserController {
     @ApiOperation({ summary: "Get paged user's subscription requests" })
     @ApiOkResponse({ type: "{rows:Subscription[],count:number}" })
     @Get("/:id/followingRequests")
-    getFollowingRequestsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    getFollowingRequestsByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters) 
     {
       return this.userService.getFollowingRequests(id,filters);
     }
@@ -107,7 +116,7 @@ export class UserController {
     @ApiOperation({ summary: "Get paged requests to subscribe a partircular user" })
     @ApiOkResponse({ type: "{rows:Subscription[],count:number}" })
     @Get("/:id/followersRequests")
-    getFollowersRequestsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    getFollowersRequestsByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters) 
     {
       return this.userService.getFollowersRequests(id,filters);
     }
@@ -115,7 +124,7 @@ export class UserController {
     @ApiOperation({ summary: "Get paged user dialogs" })
     @ApiOkResponse({ type: "{rows:Dialog[],count:number}" })
     @Get("/:id/dialogs")
-    getDialogsByUser(@Param("id") id: string,@Query() filters: RequestParameters) 
+    getDialogsByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters) 
     {
       return this.userService.getDialogsByUser(id,filters);
     }

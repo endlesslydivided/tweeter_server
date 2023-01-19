@@ -12,6 +12,7 @@ import { Tweet } from "src/tweet/tweet.model";
   
 interface UserCreationAttribute {
     firstname: string;
+    emailConfirmed: boolean;
     surname: string;
     email: string;
     password: string;
@@ -99,7 +100,7 @@ export class User extends Model<User,UserCreationAttribute>
 
     @BelongsTo(() => Media, {
         foreignKey: "mainPhotoId",
-        constraints: true, onDelete: "set null", onUpdate: "cascade"
+        constraints: false, onDelete: "set null", onUpdate: "cascade"
       })
     mainPhoto: Media;
 
