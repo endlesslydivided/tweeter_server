@@ -132,7 +132,7 @@ export class UserController {
 
     @ApiOperation({ summary: "Like tweet" })
     @ApiCreatedResponse({ type: LikedTweet })
-    @Post('/:id/likedTweets/:tweetId')
+    @Post('/:userId/likedTweets/:tweetId')
     likeTweet(@Param('userId') userId: string,@Param('tweetId') tweetId: string) 
     {
         return this.userService.createLikedTweet(userId,tweetId);
@@ -140,7 +140,7 @@ export class UserController {
 
     @ApiOperation({ summary: "Save tweet" })
     @ApiCreatedResponse({ type: SavedTweet })
-    @Post('/:id/savedTweets/:tweetId')
+    @Post('/:userId/savedTweets/:tweetId')
     saveTweet(@Param('userId') userId: string,@Param('tweetId') tweetId: string) 
     {
         return this.userService.createSavedTweet(userId,tweetId);
@@ -150,14 +150,14 @@ export class UserController {
     @Delete('/:userId/likedTweets/:tweetId')
     deleteLikedTweet(@Param('userId') userId: string,@Param('tweetId') tweetId: string) 
     {
-        return this.userService.deleteSavedTweetById(userId,tweetId);
+        return this.userService.deleteLikedTweetById(userId,tweetId);
     }  
 
     @ApiOperation({ summary: "Delete saved tweet" })
     @Delete('/:userId/savedTweets/:tweetId')
     deleteSavedTweet(@Param('userId') userId: string,@Param('tweetId') tweetId: string) 
     {
-        return this.userService.deleteLikedTweetById(userId,tweetId);
+        return this.userService.deleteSavedTweetById(userId,tweetId);
     }  
 
 

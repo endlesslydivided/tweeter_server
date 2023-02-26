@@ -59,7 +59,7 @@ export class Tweet extends Model<Tweet, TweetCreationAttribute> {
     @Column({ type: DataType.UUID, allowNull: true })
     parentRecordId: string;
 
-    @BelongsTo(() => Tweet,{foreignKey:"parentRecordId",constraints:true,onDelete:"set null"})
+    @BelongsTo(() => Tweet,{foreignKey:"parentRecordId",constraints:true,onDelete:"set null",as:"isRetweeted"})
     parentRecord: Tweet;
 
     //Tweet's media
@@ -73,10 +73,10 @@ export class Tweet extends Model<Tweet, TweetCreationAttribute> {
     @BelongsToMany(() => User, () => LikedTweet,"tweetId")
     usersLikes: User[];
 
-    @HasMany(() => SavedTweet)
+    @HasMany(() => SavedTweet,{as:'isSaved'})
     savedTweets: SavedTweet[]
 
-    @HasMany(() => LikedTweet)
+    @HasMany(() => LikedTweet,{as:'isLiked'})
     likedTweets: LikedTweet[]
 
 }

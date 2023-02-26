@@ -6,17 +6,17 @@ export class CreateTweetDTO {
 
   @ApiProperty({ example: "My first post content", description: "Tweet text" })
   @IsString({ message: "Must be a string" })
-  @Length(0, 1000, { message: "Text length: from 0 to 1000 symbols" })
+  @Length(0, 1001, { message: "Text length: from 0 to 1000 symbols" })
   @IsOptional()
   text: string  = null;
 
-  @Transform(({ value }) => value === 'false' ? false : Boolean(value))
+  @Transform(({ value }) => value === 'true')
   @ApiProperty({ example: "false", description: "Is tweet a comment?" })
   @IsBoolean({ message: "Must be a boolean value" })
   @IsNotEmpty({ message: "IsComment value isn't presented" })
   isComment: boolean;
 
-  @Transform(({ value }) => value === 'false' ? false : Boolean(value))
+  @Transform(({ value }) => value === 'true')
   @ApiProperty({ example: "false", description: "Is tweet public?" })
   @IsBoolean({ message: "Must be a boolean value" })
   @IsNotEmpty({ message: "IsPublic value isn't presented" })

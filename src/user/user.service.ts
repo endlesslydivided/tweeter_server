@@ -1,13 +1,14 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { InternalServerErrorException, NotFoundException } from '@nestjs/common/exceptions';
 import { InjectModel } from '@nestjs/sequelize';
-import { Op, QueryTypes, Transaction } from 'sequelize';
+import sequelize from 'sequelize';
+import { Op, QueryTypes, Sequelize, Transaction } from 'sequelize';
 import { Dialog } from '../dialog/dialog.model';
 import { UserDialog } from '../dialog/userDialog.model';
 import { Media } from '../media/media.model';
 import { MediaService } from '../media/media.service';
 import { Message } from '../message/message.model';
-import DBQueryParameters from '../requestFeatures/dbquery.params copy';
+import DBQueryParameters from '../requestFeatures/dbquery.params';
 import QueryParameters from '../requestFeatures/query.params';
 import { Subscription } from '../subscription/subscription.model';
 import { LikedTweet } from '../tweet/likedTweet.model';
@@ -106,8 +107,16 @@ export class UserService {
         const media = await this.mediaRepository.findAndCountAll({
           ...filters,
           distinct:true,
-          include:[{model:Tweet,attributes:['id'], where:{authorId:id}}],
-          
+          include:
+          [
+            {
+              model:Tweet,attributes:['id'], where:{authorId:id},
+              include:
+              [            
+                {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+              ]
+            },
+          ],
         })
 
         return media;
@@ -117,7 +126,7 @@ export class UserService {
     {
       const count = await this.tweetRepository.count({where:{authorId:id,isComment:false}});
 
-      const {limit,offset} = filters;
+      const {limit,offset,order} = filters;
 
       const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_liked_tweets_ids(:userId,:offset,:limit) "id"`,
         {
@@ -133,11 +142,23 @@ export class UserService {
 
       const rows = await this.tweetRepository.findAll({
           where: {id:{[Op.in]:tweetIds}},
+          order,
           include:[
             {model: Media,as:'tweetMedia'},
-            {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+            {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false},
+            {model: Tweet,as: 'isRetweeted',attributes:['id'], required:false,
+            where:
+            {
+              isComment:false,
+              isPublic:true,
+              parentRecordId: {[Op.ne]: null}
+            }},
+            {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
           ]
-      })
+      }).catch(error =>
+        {
+          error;
+        })
 
       return {count,rows};
     }
@@ -146,7 +167,7 @@ export class UserService {
     {
       const count = await this.tweetRepository.count({where:{authorId:id,isComment:false}});
       
-      const {limit,offset} = filters;
+      const {limit,offset,order} = filters;
 
       const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_saved_tweets_ids(:userId,:offset,:limit) "id"`,
         {
@@ -162,21 +183,29 @@ export class UserService {
 
       const rows = await this.tweetRepository.findAll({
           where: {id:{[Op.in]:tweetIds}},
+          order,
           include:[
             {model: Media,as:'tweetMedia'},
+            {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false},
+            {model: Tweet,as: 'isRetweeted',attributes:['id'], required:false,
+            where:
+            {
+              isComment:false,
+              isPublic:true,
+              parentRecordId: {[Op.ne]: null}
+            }},
             {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
           ]
       })
 
       return {count,rows};
     }
-
         
     async getUserTweets(id:string,filters : DBQueryParameters)
     {
       const count = await this.tweetRepository.count({where:{authorId:id,isComment:false}});
       
-      const {limit,offset} = filters;
+      const {limit,offset,order} = filters;
 
       const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_tweets_ids(:authorId,:offset,:limit) "id"`,
         {
@@ -192,8 +221,18 @@ export class UserService {
 
       const rows = await this.tweetRepository.findAll({
           where: {id:{[Op.in]:tweetIds}},
+          order,
           include:[
             {model: Media,as:'tweetMedia'},
+            {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false},
+            {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false},
+            {model: Tweet,as: 'isRetweeted',attributes:['id'], required:false,
+            where:
+            {
+              isComment:false,
+              isPublic:true,
+              parentRecordId: {[Op.ne]: null}
+            }},
             {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
           ]
       })
@@ -215,7 +254,7 @@ export class UserService {
         throw new InternalServerErrorException("User feed tweets are not found. Internal server error.");
       });
 
-      const {limit,offset} = filters;
+      const {limit,offset,order} = filters;
 
       const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_feed_tweets_ids(:authorId,:offset,:limit) "id"`,
         {
@@ -231,6 +270,7 @@ export class UserService {
 
       const rows = await this.tweetRepository.findAll({
         where: {id:{[Op.in]:tweetIds}},
+        order,
         include:[
           {model: Media,as:'tweetMedia'},
           {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
@@ -297,7 +337,6 @@ export class UserService {
         return requests;
     }
 
-
     async getUserFollowers(id: string,filters : DBQueryParameters) 
     {
   
@@ -355,7 +394,6 @@ export class UserService {
       return result;
     }
 
-    
     async getDialogsByUser(userId: string, filters: DBQueryParameters) 
     {
   

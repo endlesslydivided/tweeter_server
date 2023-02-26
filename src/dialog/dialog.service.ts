@@ -2,7 +2,7 @@ import { ForbiddenException, Injectable, InternalServerErrorException, Logger, N
 import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
 import { Transaction } from 'sequelize';
-import DBQueryParameters from 'src/requestFeatures/dbquery.params copy';
+import DBQueryParameters from 'src/requestFeatures/dbquery.params';
 import { Subscription } from 'src/subscription/subscription.model';
 import { Media } from '../media/media.model';
 import { Message } from '../message/message.model';
