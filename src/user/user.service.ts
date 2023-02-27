@@ -222,20 +222,27 @@ export class UserService {
       const rows = await this.tweetRepository.findAll({
           where: {id:{[Op.in]:tweetIds}},
           order,
-          include:[
+          include:
+          [
             {model: Media,as:'tweetMedia'},
             {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false},
             {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false},
-            {model: Tweet,as: 'isRetweeted',attributes:['id'], required:false,
-            where:
             {
-              isComment:false,
-              isPublic:true,
-              parentRecordId: {[Op.ne]: null}
-            }},
+              model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
+              where:{isComment:false,isPublic:true}
+            },
+            {model: Tweet,required:false,as:'parentRecord',include:
+            [
+              {model: Media,as:'tweetMedia'},
+              {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
+
+            ]},
             {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
           ]
-      })
+      }).catch((error) => {
+        this.logger.error(`User saved tweets are not found: ${error.message}`);
+        throw new InternalServerErrorException("User saved tweets are not found. Internal server error.");
+      });
 
       return {count,rows};
     }

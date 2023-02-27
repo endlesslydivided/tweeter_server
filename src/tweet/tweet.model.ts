@@ -60,6 +60,9 @@ export class Tweet extends Model<Tweet, TweetCreationAttribute> {
     parentRecordId: string;
 
     @BelongsTo(() => Tweet,{foreignKey:"parentRecordId",constraints:true,onDelete:"set null",as:"isRetweeted"})
+    isRetweeted: Tweet;
+
+    @BelongsTo(() => Tweet,{foreignKey:"parentRecordId",constraints:true,onDelete:"set null",as:"parentRecord"})
     parentRecord: Tweet;
 
     //Tweet's media

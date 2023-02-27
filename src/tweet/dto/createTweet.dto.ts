@@ -10,13 +10,13 @@ export class CreateTweetDTO {
   @IsOptional()
   text: string  = null;
 
-  @Transform(({ value }) => value === 'true')
+  @Transform(({ value }) => value === 'true' || value === true ? true : false)
   @ApiProperty({ example: "false", description: "Is tweet a comment?" })
   @IsBoolean({ message: "Must be a boolean value" })
   @IsNotEmpty({ message: "IsComment value isn't presented" })
   isComment: boolean;
 
-  @Transform(({ value }) => value === 'true')
+  @Transform(({ value }) => value === 'true' || value === true ? true : false)
   @ApiProperty({ example: "false", description: "Is tweet public?" })
   @IsBoolean({ message: "Must be a boolean value" })
   @IsNotEmpty({ message: "IsPublic value isn't presented" })

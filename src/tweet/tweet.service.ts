@@ -28,7 +28,7 @@ export class TweetService {
             throw new InternalServerErrorException('Tweet cannot be created. Internal server error.')
         });
 
-        if(files.length !== 0)
+        if(files && files.length !== 0)
         {
             await this.mediaService.createTweetMedia(files, tweet.id,transaction)
             .catch((error) => 
