@@ -41,7 +41,7 @@ export class Tweet extends Model<Tweet, TweetCreationAttribute> {
     @Column({ type: DataType.UUID, allowNull: true })
     authorId: string;
 
-    @BelongsTo(() => User,{foreignKey:"authorId",constraints:true,onDelete:"set null"})
+    @BelongsTo(() => User,{foreignKey:"authorId",constraints:true,onDelete:"SET NULL"})
     author: User;
 
     //Parent record author foreign key
@@ -50,7 +50,7 @@ export class Tweet extends Model<Tweet, TweetCreationAttribute> {
     @Column({ type: DataType.UUID, allowNull: true })
     parentRecordAuthorId: string;
 
-    @BelongsTo(() => User,{foreignKey:"parentRecordAuthorId",constraints:true,onDelete:"set null"})
+    @BelongsTo(() => User,{foreignKey:"parentRecordAuthorId",constraints:true,onDelete:"SET NULL"})
     parentRecordAuthor: User;
 
     //Parent record foreign key
@@ -59,10 +59,10 @@ export class Tweet extends Model<Tweet, TweetCreationAttribute> {
     @Column({ type: DataType.UUID, allowNull: true })
     parentRecordId: string;
 
-    @BelongsTo(() => Tweet,{foreignKey:"parentRecordId",constraints:true,onDelete:"set null",as:"isRetweeted"})
+    @BelongsTo(() => Tweet,{foreignKey:"parentRecordId",constraints:true,onDelete:"CASCADE",as:"isRetweeted"})
     isRetweeted: Tweet;
 
-    @BelongsTo(() => Tweet,{foreignKey:"parentRecordId",constraints:true,onDelete:"set null",as:"parentRecord"})
+    @BelongsTo(() => Tweet,{foreignKey:"parentRecordId",constraints:true,onDelete:"CASCADE",as:"parentRecord"})
     parentRecord: Tweet;
 
     //Tweet's media

@@ -1,8 +1,10 @@
-import { Body, Controller, Delete, Param, Post,UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post,Query,UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Transaction } from 'sequelize';
 import { AuthJWTGuard } from 'src/auth/guards/auth.guard';
+import QueryParameters from 'src/requestFeatures/query.params';
+import { QueryParamsPipe } from 'src/requestFeatures/queryParams.pipe';
 import { TransactionInterceptor } from 'src/transactions/transaction.interceptor';
 import { TransactionParam } from 'src/transactions/transactionParam.decorator';
 import { CreateTweetDTO } from './dto/createTweet.dto';
@@ -28,7 +30,15 @@ export class TweetController {
     {
         return this.tweetService.createTweet(files,dto,transaction);
     }  
-
+    
+    @ApiOperation({ summary: "Get comments for tweet" })
+    @ApiOkResponse({ type: "{rows:Tweet[],count:number}" })
+    @Get("/:id/comments")
+    getFollowersRequestsByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters): any 
+    {
+      return this.tweetService.getComments(id,filters);
+    }
+    
     @ApiOperation({ summary: "Delete tweet" })
     @Delete(':id')
     deleteTweet(@Param('id') id: string) 

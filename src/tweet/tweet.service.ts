@@ -1,9 +1,13 @@
 import {  forwardRef, Inject, Injectable, InternalServerErrorException,Logger,NotFoundException} from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common/exceptions';
 import { InjectModel } from '@nestjs/sequelize';
-import { Transaction } from 'sequelize';
+import { Op, Sequelize, Transaction } from 'sequelize';
+import { Media } from 'src/media/media.model';
+import DBQueryParameters from 'src/requestFeatures/dbquery.params';
+import { User } from 'src/user/user.model';
 import { MediaService } from '../media/media.service';
 import { CreateTweetDTO } from './dto/createTweet.dto';
+import { LikedTweet } from './likedTweet.model';
 import { Tweet } from './tweet.model';
 
 @Injectable()
@@ -51,6 +55,34 @@ export class TweetService {
             throw new NotFoundException(`Tweet is not found.`)
         }
         return tweet;
+    }
+
+    async getComments(id: string,filters : DBQueryParameters) 
+    {
+        const result = await this.tweetRepository.findAndCountAll({
+            where:{isComment:true},
+            ...filters,
+            include:
+            [
+              {model: Media,as:'tweetMedia'},
+              {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false},
+              {
+                model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
+                where:{isPublic:true}
+              },
+              {model: Tweet,required:false,as:'parentRecord', where:{id},include:
+              [
+                {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
+  
+              ]},
+              {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+            ]
+        }).catch((error) => {
+          this.logger.error(`Comment aren't found: ${error.message}`);
+          throw new InternalServerErrorException("Comment aren't found. Internal server error.");
+        });
+  
+        return result;
     }
 
     async deleteTweetById(id: string) 
