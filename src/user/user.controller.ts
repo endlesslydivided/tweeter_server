@@ -13,6 +13,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Transaction } from 'sequelize';
 import { TransactionParam } from '../transactions/transactionParam.decorator';
 import QueryParameters from '../requestFeatures/query.params';
+import { CurrentUserArgs } from 'src/auth/decorators/currentUserArgs.decorator';
 
 @ApiTags("Users")
 @Controller("users")
@@ -84,9 +85,9 @@ export class UserController {
     @ApiOperation({ summary: "Get paged user's tweets" })
     @ApiOkResponse({ type: "{rows:Tweet[],count:number}" })
     @Get("/:id/tweets")
-    getTweetsByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters) 
+    getTweetsByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters,@CurrentUserArgs() currentUser: CurrentUserArgs) 
     {
-      return this.userService.getUserTweets(id,filters);
+      return this.userService.getUserTweets(id,filters,currentUser.userId);
     }
 
     @ApiOperation({ summary: "Get paged user's feed" })

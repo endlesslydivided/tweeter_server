@@ -122,28 +122,188 @@ export class UserService {
         return media;
     }
 
+    /*#region Recursive Get tweets methods */
+    // async getUserLikedTweets(id:string,filters : DBQueryParameters)
+    // {
+    //   const count = await this.tweetRepository.count({where:{authorId:id,isComment:false}});
+
+    //   const {limit,offset,order} = filters;
+
+    //   const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_liked_tweets_ids(:userId,:offset,:limit) "id"`,
+    //     {
+    //       replacements: {userId:id,limit,offset},
+    //       type: QueryTypes.SELECT,
+    //     }
+    //   )
+    //   .then(result =>result.map((x:{id:string}) => x.id))
+    //   .catch((error) => {
+    //     this.logger.error(`User liked tweets are not found: ${error.message}`);
+    //     throw new InternalServerErrorException("User liked tweets are not found. Internal server error.");
+    //   });
+
+    //   const rows = await this.tweetRepository.findAll({
+    //       where: {id:{[Op.in]:tweetIds}},
+    //       order,
+    //       include:[
+    //         {model: Media,as:'tweetMedia'},
+    //         {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false},
+    //         {
+    //           model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
+    //           where:{isComment:false,isPublic:true}
+    //         },
+    //         {model: Tweet,required:false,as:'parentRecord',include:
+    //         [
+    //           {model: Media,as:'tweetMedia'},
+    //           {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
+
+    //         ]},
+    //         {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+    //       ]
+    //   }).catch(error =>
+    //     {
+    //       error;
+    //     })
+
+    //   return {count,rows};
+    // }
+
+    // async getUserSavedTweets(id:string,filters : DBQueryParameters)
+    // {
+    //   const count = await this.tweetRepository.count({where:{authorId:id,isComment:false}});
+      
+    //   const {limit,offset,order} = filters;
+
+    //   const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_saved_tweets_ids(:userId,:offset,:limit) "id"`,
+    //     {
+    //       replacements: {userId:id,limit,offset},
+    //       type: QueryTypes.SELECT,
+    //     }
+    //   )
+    //   .then(result =>result.map((x:{id:string}) => x.id))
+    //   .catch((error) => {
+    //     this.logger.error(`User saved tweets are not found: ${error.message}`);
+    //     throw new InternalServerErrorException("User saved tweets are not found. Internal server error.");
+    //   });
+
+    //   const rows = await this.tweetRepository.findAll({
+    //       where: {id:{[Op.in]:tweetIds}},
+    //       order,
+    //       include:[
+    //         {model: Media,as:'tweetMedia'},
+    //         {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false},
+    //         {
+    //           model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
+    //           where:{isComment:false,isPublic:true}
+    //         },
+    //         {model: Tweet,required:false,as:'parentRecord',include:
+    //         [
+    //           {model: Media,as:'tweetMedia'},
+    //           {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
+
+    //         ]},
+    //         {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+    //       ]
+    //   })
+
+    //   return {count,rows};
+    // }
+        
+    // async getUserTweets(id:string,filters : DBQueryParameters)
+    // {
+    //   const count = await this.tweetRepository.count({where:{authorId:id,isComment:false}});
+      
+    //   const {limit,offset,order} = filters;
+
+    //   const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_tweets_ids(:authorId,:offset,:limit) "id"`,
+    //     {
+    //       replacements: {authorId:id,limit,offset},
+    //       type: QueryTypes.SELECT,
+    //     }
+    //   )
+    //   .then(result =>result.map((x:{id:string}) => x.id))
+    //   .catch((error) => {
+    //     this.logger.error(`User tweets are not found: ${error.message}`);
+    //     throw new InternalServerErrorException("User tweets are not found. Internal server error.");
+    //   });
+
+    //   const rows = await this.tweetRepository.findAll({
+    //       where: {id:{[Op.in]:tweetIds}},
+    //       order,
+    //       include:
+    //       [
+    //         {model: Media,as:'tweetMedia'},
+    //         {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false},
+    //         {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false},
+    //         {
+    //           model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
+    //           where:{isComment:false,isPublic:true}
+    //         },
+    //         {model: Tweet,required:false,as:'parentRecord',include:
+    //         [
+    //           {model: Media,as:'tweetMedia'},
+    //           {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
+
+    //         ]},
+    //         {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+    //       ]
+    //   }).catch((error) => {
+    //     this.logger.error(`User saved tweets are not found: ${error.message}`);
+    //     throw new InternalServerErrorException("User saved tweets are not found. Internal server error.");
+    //   });
+
+    //   return {count,rows};
+    // }
+
+    // async getUserFeed(id: string, filters : DBQueryParameters) 
+    // {
+    //   const count = await this.tweetRepository.sequelize.query(`select get_user_feed_tweets_count(:userId) "count"`,
+    //     {
+    //       replacements: {userId:id},
+    //       type: QueryTypes.SELECT,
+    //     }
+    //   )
+    //   .then((result:Array<{count:number}>) => result[0].count)
+    //   .catch((error) => {
+    //     this.logger.error(`User feed tweets are not found: ${error.message}`);
+    //     throw new InternalServerErrorException("User feed tweets are not found. Internal server error.");
+    //   });
+
+    //   const {limit,offset,order} = filters;
+
+    //   const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_feed_tweets_ids(:authorId,:offset,:limit) "id"`,
+    //     {
+    //       replacements: {authorId:id,limit,offset},
+    //       type: QueryTypes.SELECT,
+    //     }
+    //   )
+    //   .then(result =>result.map((x:{id:string}) => x.id))
+    //   .catch((error) => {
+    //     this.logger.error(`User feed tweets are not found: ${error.message}`);
+    //     throw new InternalServerErrorException("User feed tweets are not found. Internal server error.");
+    //   });
+
+    //   const rows = await this.tweetRepository.findAll({
+    //     where: {id:{[Op.in]:tweetIds}},
+    //     order,
+    //     include:[
+    //       {model: Media,as:'tweetMedia'},
+    //       {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+    //     ]
+    //   })
+
+    //   return {count,rows};
+    // }
+    /*#endregion*/
+
+    /*#region Simple Get tweets methods */
     async getUserLikedTweets(id:string,filters : DBQueryParameters)
     {
-      const count = await this.tweetRepository.count({where:{authorId:id,isComment:false}});
-
-      const {limit,offset,order} = filters;
-
-      const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_liked_tweets_ids(:userId,:offset,:limit) "id"`,
-        {
-          replacements: {userId:id,limit,offset},
-          type: QueryTypes.SELECT,
-        }
-      )
-      .then(result =>result.map((x:{id:string}) => x.id))
-      .catch((error) => {
-        this.logger.error(`User liked tweets are not found: ${error.message}`);
-        throw new InternalServerErrorException("User liked tweets are not found. Internal server error.");
-      });
-
-      const rows = await this.tweetRepository.findAll({
-          where: {id:{[Op.in]:tweetIds}},
-          order,
-          include:[
+      const result = await this.tweetRepository.findAndCountAll({
+          ...filters,
+          where:{isComment:false},
+          include:
+          [
+            {model: LikedTweet, where:{userId:id}},
             {model: Media,as:'tweetMedia'},
             {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false},
             {
@@ -158,36 +318,22 @@ export class UserService {
             ]},
             {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
           ]
-      }).catch(error =>
+        }).catch(error =>
         {
           error;
         })
 
-      return {count,rows};
+      return result;
     }
-
+    
     async getUserSavedTweets(id:string,filters : DBQueryParameters)
     {
-      const count = await this.tweetRepository.count({where:{authorId:id,isComment:false}});
-      
-      const {limit,offset,order} = filters;
-
-      const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_saved_tweets_ids(:userId,:offset,:limit) "id"`,
-        {
-          replacements: {userId:id,limit,offset},
-          type: QueryTypes.SELECT,
-        }
-      )
-      .then(result =>result.map((x:{id:string}) => x.id))
-      .catch((error) => {
-        this.logger.error(`User saved tweets are not found: ${error.message}`);
-        throw new InternalServerErrorException("User saved tweets are not found. Internal server error.");
-      });
-
-      const rows = await this.tweetRepository.findAll({
-          where: {id:{[Op.in]:tweetIds}},
-          order,
-          include:[
+        const result = await this.tweetRepository.findAndCountAll({
+          ...filters,
+          where:{isComment:false},
+          include:
+          [
+            {model: SavedTweet, where:{userId:id}},
             {model: Media,as:'tweetMedia'},
             {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false},
             {
@@ -202,40 +348,27 @@ export class UserService {
             ]},
             {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
           ]
-      })
+        }).catch(error =>
+        {
+          error;
+        })
 
-      return {count,rows};
+      return result;
     }
         
-    async getUserTweets(id:string,filters : DBQueryParameters)
+    async getUserTweets(id:string,filters : DBQueryParameters,currentUserId:string)
     {
-      const count = await this.tweetRepository.count({where:{authorId:id,isComment:false}});
-      
-      const {limit,offset,order} = filters;
-
-      const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_tweets_ids(:authorId,:offset,:limit) "id"`,
-        {
-          replacements: {authorId:id,limit,offset},
-          type: QueryTypes.SELECT,
-        }
-      )
-      .then(result =>result.map((x:{id:string}) => x.id))
-      .catch((error) => {
-        this.logger.error(`User tweets are not found: ${error.message}`);
-        throw new InternalServerErrorException("User tweets are not found. Internal server error.");
-      });
-
-      const rows = await this.tweetRepository.findAll({
-          where: {id:{[Op.in]:tweetIds}},
-          order,
+        const result = await this.tweetRepository.findAndCountAll({
+          where:{authorId:id,isComment:false},
+          ...filters,
           include:
           [
             {model: Media,as:'tweetMedia'},
-            {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false},
-            {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false},
+            {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false,where:{userId:currentUserId}},
+            {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false,where:{userId:currentUserId}},
             {
               model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
-              where:{isComment:false,isPublic:true}
+              where:{isComment:false,isPublic:true,authorId:currentUserId}
             },
             {model: Tweet,required:false,as:'parentRecord',include:
             [
@@ -245,54 +378,62 @@ export class UserService {
             ]},
             {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
           ]
-      }).catch((error) => {
-        this.logger.error(`User saved tweets are not found: ${error.message}`);
-        throw new InternalServerErrorException("User saved tweets are not found. Internal server error.");
-      });
+        }).catch(error =>
+        {
+          console.log(error);
+          
+        })
 
-      return {count,rows};
+      return result;
+
     }
 
     async getUserFeed(id: string, filters : DBQueryParameters) 
     {
-      const count = await this.tweetRepository.sequelize.query(`select get_user_feed_tweets_count(:userId) "count"`,
-        {
-          replacements: {userId:id},
-          type: QueryTypes.SELECT,
-        }
-      )
-      .then((result:Array<{count:number}>) => result[0].count)
-      .catch((error) => {
-        this.logger.error(`User feed tweets are not found: ${error.message}`);
-        throw new InternalServerErrorException("User feed tweets are not found. Internal server error.");
+      const subscriptionsId = await this.subsRepository.findAll({where:{subscriberId:id}}).then((result)=>
+      {
+        return result.map((item) => item.id);
       });
 
-      const {limit,offset,order} = filters;
-
-      const tweetIds = await this.tweetRepository.sequelize.query(`select get_user_feed_tweets_ids(:authorId,:offset,:limit) "id"`,
+      const result = await this.tweetRepository.findAndCountAll({
+        ...filters,
+        where:
         {
-          replacements: {authorId:id,limit,offset},
-          type: QueryTypes.SELECT,
-        }
-      )
-      .then(result =>result.map((x:{id:string}) => x.id))
-      .catch((error) => {
-        this.logger.error(`User feed tweets are not found: ${error.message}`);
-        throw new InternalServerErrorException("User feed tweets are not found. Internal server error.");
-      });
-
-      const rows = await this.tweetRepository.findAll({
-        where: {id:{[Op.in]:tweetIds}},
-        order,
-        include:[
+          id:
+          {
+            [Op.or]:
+            {
+              [Op.eq]:id,
+              [Op.in]:subscriptionsId
+            }
+          },
+          isComment:false
+        },
+        include:
+        [
           {model: Media,as:'tweetMedia'},
+          {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false,where:{userId:id}},
+          {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false,where:{userId:id}},
+        {
+            model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
+            where:{isComment:false,isPublic:true}
+          },
+          {model: Tweet,required:false,as:'parentRecord',include:
+          [
+            {model: Media,as:'tweetMedia'},
+            {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
+
+          ]},
           {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
         ]
+      }).catch(error =>
+      {
+        console.log(error);    
       })
 
-      return {count,rows};
+      return result;
     }
-
+    /*#endregion*/
     async getFollowersRequests(id: string,filters : DBQueryParameters) 
     {
         const requests = await  this.subsRepository.findAndCountAll(
