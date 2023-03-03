@@ -60,7 +60,7 @@ export class TweetService {
     async getComments(id: string,filters : DBQueryParameters) 
     {
         const result = await this.tweetRepository.findAndCountAll({
-            where:{isComment:true},
+            where:{[Op.and]:{isComment:true,parentRecordId:id}},
             ...filters,
             include:
             [
