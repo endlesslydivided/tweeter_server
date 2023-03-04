@@ -3,6 +3,7 @@ import { InternalServerErrorException, NotFoundException } from '@nestjs/common/
 import { InjectModel } from '@nestjs/sequelize';
 import sequelize from 'sequelize';
 import { Op, QueryTypes, Sequelize, Transaction } from 'sequelize';
+import { TweetCounts } from 'src/tweet/tweetcounts.model';
 import { Dialog } from '../dialog/dialog.model';
 import { UserDialog } from '../dialog/userDialog.model';
 import { Media } from '../media/media.model';
@@ -17,6 +18,31 @@ import { Tweet } from '../tweet/tweet.model';
 import { CreateUserDTO } from './dto/createUser.dto';
 import { UpdateUserDTO } from './dto/updateUser.dto';
 import { User } from './user.model';
+
+const countIncludes =[
+  {model: TweetCounts}
+]
+
+
+const userActionIncludes = (currentUserId) => [
+  {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false,where:{userId:currentUserId}},
+  {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false,where:{userId:currentUserId}},
+  {
+    model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
+    where:{[Op.and]:{isComment:false,isPublic:true,authorId:currentUserId}}
+  },
+]
+
+const tweetExtraIncludes = [
+  {model: Media,as:'tweetMedia'},
+  {model: Tweet,required:false,as:'parentRecord',include:
+  [
+    {model: Media,as:'tweetMedia'},
+    {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
+
+  ]},
+  {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+]
 
 @Injectable()
 export class UserService {
@@ -303,24 +329,18 @@ export class UserService {
           where:{isComment:false},
           include:
           [
-            {model: LikedTweet, where:{userId:id}},
-            {model: Media,as:'tweetMedia'},
-            {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false},
+            {model: LikedTweet,as:"isLiked", where:{userId:id}},
+            {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false,where:{userId:id}},
             {
               model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
-              where:{isComment:false,isPublic:true}
+              where:{[Op.and]:{isComment:false,isPublic:true,authorId:id}}
             },
-            {model: Tweet,required:false,as:'parentRecord',include:
-            [
-              {model: Media,as:'tweetMedia'},
-              {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
-
-            ]},
-            {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+            ...countIncludes,
+            ...tweetExtraIncludes
           ]
         }).catch(error =>
         {
-          error;
+          console.log(error);
         })
 
       return result;
@@ -333,24 +353,18 @@ export class UserService {
           where:{isComment:false},
           include:
           [
-            {model: SavedTweet, where:{userId:id}},
-            {model: Media,as:'tweetMedia'},
-            {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false},
+            {model: SavedTweet,as: 'isSaved', where:{userId:id}},
+            {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false,where:{userId:id}},
             {
               model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
-              where:{isComment:false,isPublic:true}
+              where:{[Op.and]:{isComment:false,isPublic:true,authorId:id}}
             },
-            {model: Tweet,required:false,as:'parentRecord',include:
-            [
-              {model: Media,as:'tweetMedia'},
-              {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
-
-            ]},
-            {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+            ...countIncludes,
+            ...tweetExtraIncludes
           ]
         }).catch(error =>
         {
-          error;
+          console.log(error);         
         })
 
       return result;
@@ -359,26 +373,16 @@ export class UserService {
     async getUserTweets(id:string,filters : DBQueryParameters,currentUserId:string)
     {
         const result = await this.tweetRepository.findAndCountAll({
-          where:{authorId:id,isComment:false},
+          where:{[Op.and]:{authorId:id,isComment:false}},
           ...filters,
           include:
           [
-            {model: Media,as:'tweetMedia'},
-            {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false,where:{userId:currentUserId}},
-            {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false,where:{userId:currentUserId}},
-            {
-              model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
-              where:{isComment:false,isPublic:true,authorId:currentUserId}
-            },
-            {model: Tweet,required:false,as:'parentRecord',include:
-            [
-              {model: Media,as:'tweetMedia'},
-              {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
-
-            ]},
-            {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
-          ]
-        }).catch(error =>
+            ...countIncludes,
+            ...userActionIncludes(currentUserId),
+            ...tweetExtraIncludes
+          ]          
+        })     
+        .catch(error =>
         {
           console.log(error);         
         })
@@ -410,20 +414,9 @@ export class UserService {
         },
         include:
         [
-          {model: Media,as:'tweetMedia'},
-          {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false,where:{userId:id}},
-          {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false,where:{userId:id}},
-        {
-            model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
-            where:{isComment:false,isPublic:true}
-          },
-          {model: Tweet,required:false,as:'parentRecord',include:
-          [
-            {model: Media,as:'tweetMedia'},
-            {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
-
-          ]},
-          {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+          ...countIncludes,
+          ...userActionIncludes(id),
+          ...tweetExtraIncludes
         ]
       }).catch(error =>
       {

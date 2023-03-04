@@ -8,7 +8,42 @@ import { User } from 'src/user/user.model';
 import { MediaService } from '../media/media.service';
 import { CreateTweetDTO } from './dto/createTweet.dto';
 import { LikedTweet } from './likedTweet.model';
+import { SavedTweet } from './savedTweet.model';
 import { Tweet } from './tweet.model';
+import { TweetCounts } from './tweetcounts.model';
+
+const countIncludes = [
+    {model: TweetCounts,attributes:['tweetId','likesCount','savesCount','retweetsCount','commentsCount']}
+]
+
+const commentExtraIncludes = (id) => [
+    {model: Media,as:'tweetMedia'},
+    {model: Tweet,required:false,as:'parentRecord', where:{id},include:
+    [
+        {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
+
+    ]},
+    {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+]
+
+const tweetExtraIncludes = [
+    {model: Media,as:'tweetMedia'},
+    {model: Tweet,required:false,as:'parentRecord',include:
+    [
+        {model: Media,as:'tweetMedia'},
+        {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
+    ]},
+    {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+]
+
+const userActionIncludes = (currentUserId) => [
+    {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false,where:{userId:currentUserId}},
+    {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false,where:{userId:currentUserId}},
+    {
+        model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
+        where:{[Op.and]:{isComment:false,isPublic:true,authorId:currentUserId}}
+    }
+]
 
 @Injectable()
 export class TweetService {
@@ -16,6 +51,8 @@ export class TweetService {
     private logger: Logger = new Logger('TweetService');
 
     constructor(@InjectModel(Tweet) private tweetRepository: typeof Tweet,
+                @InjectModel(LikedTweet) private likedTweetRepository: typeof LikedTweet,
+                @InjectModel(SavedTweet) private savedTweetRepository: typeof SavedTweet,
                 @Inject(forwardRef(() => MediaService)) private mediaService: MediaService){}
 
     async createTweet(files:any[],dto: CreateTweetDTO,transaction:Transaction) 
@@ -46,9 +83,17 @@ export class TweetService {
              
     }
 
-    async getTweetById(id: string) 
-    {
-        const tweet = await this.tweetRepository.findByPk(id);
+    async getTweetById(id: string,currentUserId:string) 
+    {       
+        const tweet = await this.tweetRepository.findByPk(id,{
+            include:
+            [
+                ...tweetExtraIncludes,
+                ...countIncludes,
+                ...userActionIncludes(currentUserId)
+            ]
+        });
+        
         if(!tweet)
         {
             this.logger.error(`Tweet is not found:${id}`);
@@ -57,29 +102,22 @@ export class TweetService {
         return tweet;
     }
 
-    async getComments(id: string,filters : DBQueryParameters) 
-    {
-        const result = await this.tweetRepository.findAndCountAll({
+    async getComments(id: string,filters : DBQueryParameters,currentUserId:string)
+    {   
+       
+        const result = await this.tweetRepository.findAndCountAll(
+        {
             where:{[Op.and]:{isComment:true,parentRecordId:id}},
             ...filters,
             include:
             [
-              {model: Media,as:'tweetMedia'},
-              {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false},
-              {
-                model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
-                where:{isPublic:true}
-              },
-              {model: Tweet,required:false,as:'parentRecord', where:{id},include:
-              [
-                {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
-  
-              ]},
-              {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+                ...countIncludes,    
+                ...commentExtraIncludes(id),
+                ...userActionIncludes(currentUserId)
             ]
         }).catch((error) => {
-          this.logger.error(`Comment aren't found: ${error.message}`);
-          throw new InternalServerErrorException("Comment aren't found. Internal server error.");
+          this.logger.error(`Comments aren't found: ${error.message}`);
+          throw new InternalServerErrorException("Comments aren't found. Internal server error.");
         });
   
         return result;

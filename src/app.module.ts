@@ -26,6 +26,7 @@ import { Message } from './message/message.model';
 import { UserDialog } from './dialog/userDialog.model';
 import { ChatModule } from './chat/chat.module';
 import { AuthController } from './auth/auth.controller';
+import { TweetCounts } from './tweet/tweetcounts.model';
 
 
 @Module({
@@ -42,9 +43,9 @@ import { AuthController } from './auth/auth.controller';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      models: [User, Media,Tweet,LikedTweet,SavedTweet,Subscription,Dialog,Message,UserDialog],
+      models: [User, Media,Tweet,LikedTweet,SavedTweet,Subscription,Dialog,Message,UserDialog,TweetCounts],
       autoLoadModels: true,
-      synchronize: true
+      synchronize: false
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '.', 'static'),

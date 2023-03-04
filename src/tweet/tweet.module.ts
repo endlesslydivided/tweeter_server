@@ -7,13 +7,14 @@ import { User } from 'src/user/user.model';
 import { SavedTweet } from './savedTweet.model';
 import { LikedTweet } from './likedTweet.model';
 import { MediaModule } from '../media/media.module';
+import { TweetCounts } from './tweetcounts.model';
 
 @Module({
   providers: [TweetService],
   controllers: [TweetController],
   imports:[
     MediaModule,
-    SequelizeModule.forFeature([Tweet, User, SavedTweet,LikedTweet]),
+    SequelizeModule.forFeature([Tweet, User, SavedTweet,LikedTweet,TweetCounts]),
   ],
   exports:[
     TweetService

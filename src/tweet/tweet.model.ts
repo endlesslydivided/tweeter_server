@@ -4,6 +4,7 @@ import { User } from "src/user/user.model";
 import { Media } from "src/media/media.model";
 import { SavedTweet } from "./savedTweet.model";
 import { LikedTweet } from "./likedTweet.model";
+import { TweetCounts } from "./tweetcounts.model";
 
 
 interface TweetCreationAttribute {
@@ -61,6 +62,7 @@ export class Tweet extends Model<Tweet, TweetCreationAttribute> {
 
     @BelongsTo(() => Tweet,{foreignKey:"parentRecordId",constraints:true,onDelete:"CASCADE",as:"isRetweeted"})
     isRetweeted: Tweet;
+  
 
     @BelongsTo(() => Tweet,{foreignKey:"parentRecordId",constraints:true,onDelete:"CASCADE",as:"parentRecord"})
     parentRecord: Tweet;
@@ -76,11 +78,16 @@ export class Tweet extends Model<Tweet, TweetCreationAttribute> {
     @BelongsToMany(() => User, () => LikedTweet,"tweetId")
     usersLikes: User[];
 
-    @HasMany(() => SavedTweet,{as:'isSaved'})
-    savedTweets: SavedTweet[]
+    @HasOne(() => SavedTweet,{as:'isSaved'})
+    userSavedTweet: SavedTweet
 
-    @HasMany(() => LikedTweet,{as:'isLiked'})
-    likedTweets: LikedTweet[]
+    @HasOne(() => LikedTweet,{as:'isLiked'})
+    userLikedTweet: LikedTweet
+
+    @HasOne(() => TweetCounts,{as:'counts',foreignKey:'tweetId'})
+    counts: TweetCounts
+
+
 
 }
 
