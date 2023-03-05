@@ -140,7 +140,9 @@ export class TweetService {
 
     async deleteTweetById(id: string) 
     {
-        return await this.tweetRepository.destroy({where:{id}});
+        const tweet = await this.tweetRepository.findByPk(id);
+        await this.tweetRepository.destroy({where:{id}});
+        return tweet;
     }
  
    
