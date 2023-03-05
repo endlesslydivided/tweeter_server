@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { InternalServerErrorException, NotFoundException } from '@nestjs/common/exceptions';
 import { InjectModel } from '@nestjs/sequelize';
+import { filter } from 'rxjs';
 import sequelize from 'sequelize';
 import { Op, QueryTypes, Sequelize, Transaction } from 'sequelize';
 import { TweetCounts } from 'src/tweet/tweetcounts.model';
@@ -324,12 +325,25 @@ export class UserService {
     /*#region Simple Get tweets methods */
     async getUserLikedTweets(id:string,filters : DBQueryParameters)
     {
+      const where=
+      {
+          [Op.and]: 
+          [
+              sequelize.where(sequelize.col('isLiked.userId'), { [Op.eq]: id } ),
+          ]
+      }
+
+      if(filters.createdAt)
+      {
+          where[Op.and].push(sequelize.where(sequelize.col('isLiked.createdAt'), { [Op.lt]:filters.createdAt} ));
+      }
+
       const result = await this.tweetRepository.findAndCountAll({
-          ...filters,
+          limit:filters.limit,
           where:{isComment:false},
           include:
           [
-            {model: LikedTweet,as:"isLiked", where:{userId:id}},
+            {model: LikedTweet,as:"isLiked", where,order:filters.order},
             {model: SavedTweet,as: 'isSaved',attributes:['tweetId'],required:false,where:{userId:id}},
             {
               model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
@@ -348,12 +362,25 @@ export class UserService {
     
     async getUserSavedTweets(id:string,filters : DBQueryParameters)
     {
+
+        const where=
+        {
+            [Op.and]: 
+            [
+                sequelize.where(sequelize.col('isSaved.userId'), { [Op.eq]: id } ),
+            ]
+        }
+
+        if(filters.createdAt)
+        {
+            where[Op.and].push(sequelize.where(sequelize.col('isSaved.createdAt'), { [Op.lt]:filters.createdAt} ));
+        }
         const result = await this.tweetRepository.findAndCountAll({
-          ...filters,
+          limit:filters.limit,
           where:{isComment:false},
           include:
           [
-            {model: SavedTweet,as: 'isSaved', where:{userId:id}},
+            {model: SavedTweet,as: 'isSaved', where,order:filters.order},
             {model: LikedTweet,as: 'isLiked',attributes:['tweetId'],required:false,where:{userId:id}},
             {
               model: Tweet,as: 'isRetweeted',required:false,on:{"parentRecordId": {[Op.eq]: Sequelize.col('Tweet.id')}},
@@ -372,20 +399,35 @@ export class UserService {
         
     async getUserTweets(id:string,filters : DBQueryParameters,currentUserId:string)
     {
-        const result = await this.tweetRepository.findAndCountAll({
-          where:{[Op.and]:{authorId:id,isComment:false}},
-          ...filters,
-          include:
-          [
-            ...countIncludes,
-            ...userActionIncludes(currentUserId),
-            ...tweetExtraIncludes
-          ]          
-        })     
-        .catch(error =>
+      const where=
         {
-          console.log(error);         
-        })
+            [Op.and]: 
+            [
+                sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: false } ),
+                sequelize.where(sequelize.col('Tweet.authorId'), { [Op.eq]: id } ),             
+            ]
+      }
+
+      if(filters.createdAt)
+      {
+          where[Op.and].push(sequelize.where(sequelize.col('Tweet.createdAt'), { [Op.lt]:filters.createdAt} ));
+      }
+
+      const result = await this.tweetRepository.findAndCountAll({
+        where,
+        limit:filters.limit,
+        order:filters.order,
+        include:
+        [
+          ...countIncludes,
+          ...userActionIncludes(currentUserId),
+          ...tweetExtraIncludes
+        ]          
+      })     
+      .catch(error =>
+      {
+        console.log(error);         
+      })
 
       return result;
 
@@ -398,20 +440,25 @@ export class UserService {
         return result.map((item) => item.id);
       });
 
+      const where=
+      {
+          [Op.and]: 
+          [
+              sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: false } ),
+              sequelize.where(sequelize.col('Tweet.parentRecordId'), { [Op.or]:{[Op.eq]:id,[Op.in]:subscriptionsId}}),             
+          ]
+      }
+
+      if(filters.createdAt)
+      {
+          where[Op.and].push(sequelize.where(sequelize.col('Tweet.createdAt'), { [Op.lt]:filters.createdAt} ));
+      }
+
+
       const result = await this.tweetRepository.findAndCountAll({
-        ...filters,
-        where:
-        {
-          id:
-          {
-            [Op.or]:
-            {
-              [Op.eq]:id,
-              [Op.in]:subscriptionsId
-            }
-          },
-          isComment:false
-        },
+        where,
+        limit:filters.limit,
+        order:filters.order,
         include:
         [
           ...countIncludes,

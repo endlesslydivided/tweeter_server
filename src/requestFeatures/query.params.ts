@@ -9,6 +9,10 @@ export default class QueryParameters
     @IsOptional()
     public limit:number;
 
+    @IsString({message:"CreatedAt param must be a string"})
+    @IsOptional()
+    public createdAt:string;
+
     @Transform(({ value }) => parseInt(value))
     @IsNumber({},{message:"Page param must be a number"})
     @Min(1,{message:"Page param must be greater than 1"}) 

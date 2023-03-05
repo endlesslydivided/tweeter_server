@@ -21,7 +21,7 @@ export class Media extends Model<Media, MediaCreationAttribute> {
     id: number;
 
     @ApiProperty({ example: "./media/234awEw909weqdW23ed.jpeg", description: "Media path on server" })
-    @Column({ type: DataType.STRING,unique:true, allowNull: false })
+    @Column({ type: DataType.STRING, allowNull: false })
     path: string;
 
     @ApiProperty({ example: "media.jpeg", description: "Media original filename"})

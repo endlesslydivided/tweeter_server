@@ -5,6 +5,8 @@ export default class DBQueryParameters
 {
     public limit?:number;
 
+    public createdAt?:string;
+
     public offset?:number;
 
     public order?:OrderItem[];

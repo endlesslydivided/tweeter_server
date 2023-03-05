@@ -1,6 +1,7 @@
 import {  forwardRef, Inject, Injectable, InternalServerErrorException,Logger,NotFoundException} from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common/exceptions';
 import { InjectModel } from '@nestjs/sequelize';
+import sequelize, { where } from 'sequelize';
 import { Op, Sequelize, Transaction } from 'sequelize';
 import { Media } from 'src/media/media.model';
 import DBQueryParameters from 'src/requestFeatures/dbquery.params';
@@ -104,11 +105,25 @@ export class TweetService {
 
     async getComments(id: string,filters : DBQueryParameters,currentUserId:string)
     {   
-       
+        const where=
+        {
+            [Op.and]: 
+            [
+                sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: true } ),
+                sequelize.where(sequelize.col('Tweet.parentRecordId'), { [Op.eq]: id } ),             
+            ]
+        }
+
+        if(filters.createdAt)
+        {
+            where[Op.and].push(sequelize.where(sequelize.col('Tweet.createdAt'), { [Op.lt]:filters.createdAt} ));
+        }
+
         const result = await this.tweetRepository.findAndCountAll(
         {
-            where:{[Op.and]:{isComment:true,parentRecordId:id}},
-            ...filters,
+            where,
+            limit:filters.limit,
+            order:filters.order,
             include:
             [
                 ...countIncludes,    

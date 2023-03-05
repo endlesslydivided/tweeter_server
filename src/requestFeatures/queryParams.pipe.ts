@@ -6,10 +6,20 @@ import QueryParameters from './query.params';
 export class QueryParamsPipe implements PipeTransform<QueryParameters, DBQueryParameters> {
   transform(value: QueryParameters, metadata: ArgumentMetadata): DBQueryParameters {
     let queryObject:DBQueryParameters = {};
-    if(value.limit && value.page)
+
+    if(value.limit)
     {
       Object.defineProperty(queryObject,"limit",{value: value.limit,enumerable:true});
+    }
+
+    if(value.page)
+    {
       Object.defineProperty(queryObject,"offset", {value: value.page *  value.limit -  value.limit,enumerable:true});
+    }
+
+    if(value.createdAt)
+    {
+      Object.defineProperty(queryObject,"createdAt", {value: value.createdAt,enumerable:true});
     }
 
     if(value.orderBy)
