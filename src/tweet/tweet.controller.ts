@@ -73,4 +73,10 @@ export class TweetController {
   deleteTweet(@Param('id') id: string) {
     return this.tweetService.deleteTweetById(id);
   }
+
+  @ApiOperation({ summary: 'Delete tweet' })
+  @Post('/:id/restored')
+  restoreTweet(@Param('id') id: string) {
+    return this.tweetService.restoreTweetById(id);
+  }
 }

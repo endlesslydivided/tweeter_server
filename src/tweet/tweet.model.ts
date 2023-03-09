@@ -15,7 +15,7 @@ interface TweetCreationAttribute {
   userId: number;
 }
 
-@Table({ tableName: "twitterRecord"})
+@Table({ tableName: "twitterRecord",paranoid:true,deletedAt:true})
 export class Tweet extends Model<Tweet, TweetCreationAttribute> {
 
     //Data fields

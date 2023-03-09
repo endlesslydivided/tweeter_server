@@ -38,7 +38,9 @@ const tweetExtraIncludes = [
   {model: Media,as:'tweetMedia'},
   {model: Tweet,required:false,as:'parentRecord',include:
   [
-    {model: Media,as:'tweetMedia'},
+    {model: Media,as:'tweetMedia'},        
+    {model: TweetCounts,on:{"tweetId": {[Op.eq]: Sequelize.col('parentRecord.id')}}},
+
     {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
 
   ]},
@@ -340,7 +342,6 @@ export class UserService {
 
       const result = await this.tweetRepository.findAndCountAll({
           limit:filters.limit,
-          where:{isComment:false},
           include:
           [
             {model: LikedTweet,as:"isLiked", where,order:filters.order},
@@ -362,7 +363,6 @@ export class UserService {
     
     async getUserSavedTweets(id:string,filters : DBQueryParameters)
     {
-
         const where=
         {
             [Op.and]: 
@@ -377,7 +377,6 @@ export class UserService {
         }
         const result = await this.tweetRepository.findAndCountAll({
           limit:filters.limit,
-          where:{isComment:false},
           include:
           [
             {model: SavedTweet,as: 'isSaved', where,order:filters.order},
@@ -404,6 +403,42 @@ export class UserService {
             [Op.and]: 
             [
                 sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: false } ),
+                sequelize.where(sequelize.col('Tweet.authorId'), { [Op.eq]: id } ),             
+            ]
+      }
+
+      if(filters.createdAt)
+      {
+          where[Op.and].push(sequelize.where(sequelize.col('Tweet.createdAt'), { [Op.lt]:filters.createdAt} ));
+      }
+
+      const result = await this.tweetRepository.findAndCountAll({
+        where,
+        subQuery:false,
+        limit:filters.limit,
+        order:filters.order,
+        include:
+        [
+          ...countIncludes,
+          ...userActionIncludes(currentUserId),
+          ...tweetExtraIncludes
+        ]          
+      })     
+      .catch(error =>
+      {
+        console.log(error);         
+      })
+
+      return result;
+
+    }
+
+    async getUserTweetsAndReplies(id:string,filters : DBQueryParameters,currentUserId:string)
+    {
+      const where=
+        {
+            [Op.and]: 
+            [
                 sequelize.where(sequelize.col('Tweet.authorId'), { [Op.eq]: id } ),             
             ]
       }

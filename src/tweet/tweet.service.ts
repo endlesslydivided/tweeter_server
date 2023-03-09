@@ -32,6 +32,7 @@ const tweetExtraIncludes = [
     {model: Tweet,required:false,as:'parentRecord',include:
     [
         {model: Media,as:'tweetMedia'},
+        {model: TweetCounts,on:{"tweetId": {[Op.eq]: Sequelize.col('parentRecord.id')}}},
         {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
     ]},
     {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
@@ -63,6 +64,19 @@ export class TweetService {
             this.logger.error(`Tweet is not created. Comment tweet must contain parent record ID and its author ID.`);
             throw new BadRequestException('Tweet is not created. Comment tweet must contain parent record ID and its author ID.')
         }
+
+        if(dto.parentRecordId)
+        {
+            const parentTweet = await this.tweetRepository.findByPk(dto.parentRecordId,{include:[...tweetExtraIncludes]});
+
+            if(parentTweet.parentRecordAuthorId !== null && parentTweet.parentRecord === null)
+            {
+                this.logger.error(`Tweet is not created. Retweet of deleted tweet is now allowed`);
+                throw new BadRequestException('Tweet is not created. Retweet of deleted tweet is now allowed')
+    
+            }
+        }
+        
         const tweet = await this.tweetRepository.create(dto,{transaction,returning:true})
         .catch((error) =>
         {
@@ -137,12 +151,16 @@ export class TweetService {
   
         return result;
     }
-
     async deleteTweetById(id: string) 
     {
         const tweet = await this.tweetRepository.findByPk(id);
-        await this.tweetRepository.destroy({where:{id}});
+        await this.tweetRepository.destroy({where:{id},});
         return tweet;
+    }
+ 
+    async restoreTweetById(id: string) 
+    {
+        return await this.tweetRepository.restore({where:{id}});
     }
  
    

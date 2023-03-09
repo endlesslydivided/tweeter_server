@@ -90,6 +90,14 @@ export class UserController {
       return this.userService.getUserTweets(id,filters,currentUser.userId);
     }
 
+    @ApiOperation({ summary: "Get paged user's tweets" })
+    @ApiOkResponse({ type: "{rows:Tweet[],count:number}" })
+    @Get("/:id/tweets-replies")
+    getTweetsAndRepliesByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters,@CurrentUserArgs() currentUser: CurrentUserArgs) 
+    {
+      return this.userService.getUserTweetsAndReplies(id,filters,currentUser.userId);
+    }
+
     @ApiOperation({ summary: "Get paged user's feed" })
     @ApiOkResponse({ type: "{rows:Tweet[],count:number}" })
     @Get("/:id/feed")
