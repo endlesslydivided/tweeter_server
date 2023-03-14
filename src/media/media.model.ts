@@ -42,8 +42,10 @@ export class Media extends Model<Media, MediaCreationAttribute> {
     tweetRecord: Tweet;
 
     @HasOne(() => User,"mainPhotoId")
-    user: User;
+    userMainPhoto: User;
   
+    @HasOne(() => User,"profilePhotoId")
+    userProfilePhoto: User;
 
 
 }

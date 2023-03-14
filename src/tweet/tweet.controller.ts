@@ -57,6 +57,16 @@ export class TweetController {
     return this.tweetService.getComments(id, filters,currentUser.userId);
   }
 
+  @ApiOperation({ summary: 'Get comments for tweet' })
+  @ApiOkResponse({ type: '{rows:Tweet[],count:number}' })
+  @Get('/top')
+  getTopTweets(
+    @Query(new QueryParamsPipe()) filters: QueryParameters,
+    @CurrentUserArgs() currentUser: CurrentUserArgs
+  ): any {
+    return this.tweetService.getTopTweets(filters,currentUser.userId);
+  }
+
   @ApiOperation({ summary: 'Get tweet' })
   @ApiOkResponse({ type: Tweet })
   @Get('/:id')
@@ -67,7 +77,15 @@ export class TweetController {
     return this.tweetService.getTweetById(id,currentUser.userId);
   }
 
-
+  @ApiOperation({ summary: 'Get tweet' })
+  @ApiOkResponse({ type: Tweet })
+  @Get('')
+  getTweets(
+    @Query(new QueryParamsPipe()) filters: QueryParameters,
+    @CurrentUserArgs() currentUser: CurrentUserArgs
+  ): any {
+    return this.tweetService.getTweets(filters,currentUser.userId);
+  }
   @ApiOperation({ summary: 'Delete tweet' })
   @Delete(':id')
   deleteTweet(@Param('id') id: string) {

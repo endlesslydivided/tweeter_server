@@ -24,46 +24,47 @@ export class UserController {
   
     @ApiOperation({ summary: "User update" })
     @ApiOkResponse({ type: User })
-    @UseInterceptors(TransactionInterceptor,FileInterceptor('file'))
+    @UseInterceptors(TransactionInterceptor,FileInterceptor('mainPhoto'),FileInterceptor('profilePhoto'))
     @Put("/:id")
-    updateUser(@UploadedFile()file: Express.Multer.File,
+    updateUser(@UploadedFile()mainPhoto: Express.Multer.File,
+                @UploadedFile()profilePhoto: Express.Multer.File,
                 @Body() dto: UpdateUserDTO,
                 @Param("id") id: string,
                 @TransactionParam() transaction: Transaction) 
     {
-      return this.userService.updateUserById(file,id,dto,transaction);
+      return this.userService.updateUserById(mainPhoto,profilePhoto,id,dto,transaction);
     }
   
     @ApiOperation({ summary: "Get paged users" })
     @ApiOkResponse({ type: "{rows:User[],count:number}" })
     @Get()
-    getUsers(@Query(new QueryParamsPipe()) filters: QueryParameters) 
+    getUsers(@Query(new QueryParamsPipe()) filters: QueryParameters,@CurrentUserArgs() currentUser: CurrentUserArgs) 
     {
-      return this.userService.getUsers(filters);
+      return this.userService.getUsers(filters,currentUser.userId);
     }
   
     @ApiOperation({ summary: "Get user by id" })
     @ApiOkResponse({ type: User })
     @Get("/:id")
-    getUser(@Param("id") id: string) 
+    getUser(@Param("id") id: string,@CurrentUserArgs() currentUser: CurrentUserArgs) 
     {
-      return this.userService.getUserById(id);
+      return this.userService.getUserById(id,currentUser.userId);
     }
   
     @ApiOperation({ summary: "Get paged user's subscriptions" })
     @ApiOkResponse({ type: "{rows:Subscription[],count:number}" })
     @Get("/:id/subscriptions")
-    getSubscriptionsByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters) 
+    getSubscriptionsByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters,@CurrentUserArgs() currentUser: CurrentUserArgs) 
     {
-      return this.userService.getUserSubscriptions(id,filters);
+      return this.userService.getUserSubscriptions(id,filters,currentUser.userId);
     }
 
     @ApiOperation({ summary: "Get paged user's followers" })
     @ApiOkResponse({ type: "{rows:Subscription[],count:number}" })
     @Get("/:id/followers")
-    getFollowersByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters) 
+    getFollowersByUser(@Param("id") id: string,@Query(new QueryParamsPipe()) filters: QueryParameters,@CurrentUserArgs() currentUser: CurrentUserArgs) 
     {
-      return this.userService.getUserFollowers(id,filters);
+      return this.userService.getUserFollowers(id,filters,currentUser.userId);
     }
   
     @ApiOperation({ summary: "Get paged user's liked tweets" })

@@ -1,4 +1,4 @@
-import { BelongsTo, Column, CreatedAt, DataType, Default, ForeignKey, HasOne, Model, Table, UpdatedAt } from "sequelize-typescript";
+import { BelongsTo, Column, CreatedAt, DataType, Default, ForeignKey, HasMany, HasOne, Model, Table, UpdatedAt } from "sequelize-typescript";
 import { ApiProperty } from "@nestjs/swagger";
 import { User } from "src/user/user.model";
 
@@ -32,7 +32,9 @@ export class Subscription extends Model<Subscription, SubscriptionCreationAttrib
     @Column({ type: DataType.BOOLEAN, allowNull:true})
     isRejected: boolean;
 
-    @BelongsTo(() => User,"subscriberId")
-    user: User;
+    @BelongsTo(() => User,{as:"subscriber",foreignKey:"subscriberId"})
+    subscriber: User;
 
+    @BelongsTo(() => User,{as:"subscribedUser",foreignKey:"subscribedUserId"})
+    subscribedUser: User;
 }

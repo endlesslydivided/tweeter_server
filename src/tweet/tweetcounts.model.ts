@@ -3,13 +3,13 @@ import { BelongsTo, BelongsToMany, Column, DataType, ForeignKey, Model, PrimaryK
 import { User } from "src/user/user.model";
 import { Tweet } from "./tweet.model";
 
-@Table({ tableName: "tweetCounts", createdAt:false,updatedAt:false,deletedAt:false})
+@Table({ tableName: "tweetCounts", createdAt:false,updatedAt:false,deletedAt:false,})
 export class TweetCounts extends Model<TweetCounts> {
 
   
   @ForeignKey(() => Tweet)
   @PrimaryKey
-  @Column({ type: DataType.UUID })
+  @Column({ type: DataType.UUIDV4 })
   tweetId: string;
 
   @Column({ type: DataType.BIGINT})

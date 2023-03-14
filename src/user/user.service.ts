@@ -19,6 +19,7 @@ import { Tweet } from '../tweet/tweet.model';
 import { CreateUserDTO } from './dto/createUser.dto';
 import { UpdateUserDTO } from './dto/updateUser.dto';
 import { User } from './user.model';
+import { UserCounts } from './userCounts.model';
 
 const countIncludes =[
   {model: TweetCounts}
@@ -41,10 +42,10 @@ const tweetExtraIncludes = [
     {model: Media,as:'tweetMedia'},        
     {model: TweetCounts,on:{"tweetId": {[Op.eq]: Sequelize.col('parentRecord.id')}}},
 
-    {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
+    {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]},
 
   ]},
-  {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+  {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]}
 ]
 
 @Injectable()
@@ -72,14 +73,20 @@ export class UserService {
         return await this.userRepository.findOne({ where: { email }});
     }
 
-    async getUserById(id: string) 
+    async getUserById(id: string,currentUserId:string) 
     {
         const user = await  this.userRepository.findByPk(id, {include: 
           [
-            {model:Media}
+            {model:UserCounts},
+            {model:Media,as:"mainPhoto",required:false},
+            {model:Media,as:"profilePhoto",required:false},
+            {model:Subscription,as:"isSubscribed",required:false, 
+              on:{[Op.and]:{subscriberId:currentUserId,subscribedUserId:id}}},
+            {model:Subscription,as:"isFollower",required:false,
+            on:{[Op.and]:{subscriberId:id,subscribedUserId:currentUserId}}},
           ],
-          attributes:['id','firstname','surname','email','city','country','sex','emailConfirmed']
-        });
+          attributes:['id','firstname','surname','description','email','city','country','sex','emailConfirmed']
+        }).catch(e => console.log(e));
 
         if(!user)
         {
@@ -87,19 +94,40 @@ export class UserService {
           throw new NotFoundException(`User is not found.`);
         }
 
-        const followersCount = await this.subsRepository.count({where:{subscribedUserId:id}});
-        const subscriptionsCount = await this.subsRepository.count({where:{subscriberId:id}});
-
-        return {user, followersCount, subscriptionsCount};
+        return user;
     }
 
-    async getUsers(filters: DBQueryParameters) 
+    async getMe(id: string) 
+    {
+        const user = await  this.userRepository.findByPk(id, {include: 
+          [
+            {model:UserCounts},
+            {model:Media,as:"mainPhoto"},
+            {model:Media,as:"profilePhoto"}
+          ],
+          attributes:['id','firstname','surname','description','email','city','country','sex','emailConfirmed']
+        }).catch(e => console.log(e));
+
+        if(!user)
+        {
+          this.logger.error(`User is not found: ${id}`);
+          throw new NotFoundException(`User is not found.`);
+        }
+
+        return user;
+    }
+
+
+
+    async getUsers(filters: DBQueryParameters,currentUserId:string) 
     {    
         const users = await this.userRepository.findAndCountAll({
             ...filters, 
+            where:{id:{[Op.ne]:currentUserId}},
             include: 
               [
-                {model:Media}
+                {model:UserCounts},
+                {model:Media,as:"mainPhoto"}
               ],
             subQuery: false,
             attributes:{exclude:['password','salt','accessFailedCount','emailConfirmed']}
@@ -107,7 +135,7 @@ export class UserService {
         return users;
     }
 
-    async updateUserById(file:Express.Multer.File,id:string, dto: UpdateUserDTO,transaction:Transaction) 
+    async updateUserById(mainPhoto:Express.Multer.File,profilePhoto:Express.Multer.File,id:string, dto: UpdateUserDTO,transaction:Transaction) 
     {
         const user = await this.userRepository.findByPk(id);
 
@@ -117,15 +145,26 @@ export class UserService {
           throw new NotFoundException(`User is not found.`);
         }
 
-        if(file)
+        if(mainPhoto)
         {
-            const media = await this.mediaService.createUserPhotoMedia(file, transaction)
+            const media = await this.mediaService.createUserPhotoMedia(mainPhoto, transaction)
             .catch((error) => 
             {
-                this.logger.error(`User media is not created:${error.message}`);
-                throw new InternalServerErrorException("Error occured during media creation. Internal server error.");
+                this.logger.error(`User main photo is not created:${error.message}`);
+                throw new InternalServerErrorException("Error occured during main photo creation. Internal server error.");
             }); 
-            await media.$set('user',user);
+            await media.$set('userMainPhoto',user);
+        }
+
+        if(profilePhoto)
+        {
+            const media = await this.mediaService.createUserPhotoMedia(profilePhoto, transaction)
+            .catch((error) => 
+            {
+                this.logger.error(`User profile photo is not created:${error.message}`);
+                throw new InternalServerErrorException("Error occured during profile photo creation. Internal server error.");
+            }); 
+            await media.$set('userProfilePhoto',user);
         }
 
         return await user.update(dto,{transaction});
@@ -565,61 +604,52 @@ export class UserService {
         return requests;
     }
 
-    async getUserFollowers(id: string,filters : DBQueryParameters) 
+    async getUserFollowers(id: string,filters : DBQueryParameters,currentUserId:string) 
     {
-  
-      const result = await this.subsRepository.findAndCountAll(
-        {
-          ...filters,
-          where:
-          {
-            subscribedUserId:  id,
-            isRejected: false
-          },
-          include:
-          [{
-            model: User,
-            attributes: ['id','firstname','surname','email','city','country','sex'],
-            include:
-            [
-              {model:Media}
-            ]
-          }]
-        })
-        .catch((error) => {
-          this.logger.error(`Followers are not found: ${error.message}`);
-          throw new InternalServerErrorException("Followers are not found. Internal server error.");
-        });
-      return result;
+      const followers = await  this.subsRepository.findAndCountAll({
+        where:{subscribedUserId:id},
+        ...filters, 
+        include: 
+        [  
+            {
+                model:User,
+                as:"subscriber",
+                include:
+                [
+                    {model:UserCounts},
+                    {model:Media,as:"mainPhoto",required:false},
+                    {model:Subscription,as:"isSubscribed",required:false, where:{subscriberId:currentUserId}},
+                ],
+                attributes:['id','firstname','surname','description']
+            },
+        ],
+      }).catch(e => console.log(e));
+      return followers;
     }
 
-    async getUserSubscriptions(id: string,filters : DBQueryParameters) 
+    async getUserSubscriptions(id: string,filters : DBQueryParameters,currentUserId:string) 
     {
   
-      const result = await this.subsRepository.findAndCountAll(
-        {
-          ...filters,
-          where:
-          {
-            subscriberId:  id,
-            isRejected: false
-          },
-          include:
-          [{
-            model: User,
-            attributes: ['id','firstname','surname','email','city','country','sex'],
-            include:
-            [
-              {model:Media}
-            ]
-          }]
-        })
-        .catch((error) => {
-          this.logger.error(`Subscriptions are not found: ${error.message}`);
-          throw new InternalServerErrorException("Subscriptions are not found. Internal server error.",{cause:error});
-        });
-  
-      return result;
+      const subscriptions = await  this.subsRepository.findAndCountAll({
+        where:{subscriberId:id},
+        ...filters, 
+        include: 
+        [  
+            {
+                model:User,
+                as:"subscribedUser",
+                include:
+                [
+                    {model:UserCounts},
+                    {model:Media,as:"mainPhoto",required:false},
+                    {model:Subscription,as:"isSubscribed",required:false,
+                    on:{"subscriberId": {[Op.eq]:currentUserId}}}
+                ],
+                attributes:['id','firstname','surname','description']
+            },
+        ],
+      }).catch(e => console.log(e));
+      return subscriptions;
     }
 
     async getDialogsByUser(userId: string, filters: DBQueryParameters) 
@@ -677,6 +707,7 @@ export class UserService {
 
     async deleteLikedTweetById(userId: string,tweetId:string) 
     {
-        return await this.likedTweetRepository.destroy({where:{userId,tweetId}});
+        return await this.likedTweetRepository.destroy({where:{userId,tweetId}})
+        .catch(e => console.log(e));
     }
 }

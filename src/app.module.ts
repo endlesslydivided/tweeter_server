@@ -1,32 +1,32 @@
-import { All, Inject, MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
-import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { ServeStaticModule } from "@nestjs/serve-static";
-import {join} from "path";
-import { User } from './user/user.model';
-import { TweetModule } from './tweet/tweet.module';
-import { MediaModule } from './media/media.module';
-import { Media } from './media/media.model';
-import { Tweet } from './tweet/tweet.model';
-import { LikedTweet } from './tweet/likedTweet.model';
-import { SavedTweet } from './tweet/savedTweet.model';
-import { SubscriptionModule } from './subscription/subscription.module';
-import { Subscription } from './subscription/subscription.model';
-import { FilesModule } from './files/files.module';
-import { redisModule } from './module.config';
-import { MailModule } from './mail/mail.module';
+import { join } from "path";
+import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './auth/middlewares/auth.middleware';
 import { RefreshMiddleware } from './auth/middlewares/refresh.middleware';
-import { DialogModule } from './dialog/dialog.module';
-import { MessageModule } from './message/message.module';
-import { Dialog } from './dialog/dialog.model';
-import { Message } from './message/message.model';
-import { UserDialog } from './dialog/userDialog.model';
 import { ChatModule } from './chat/chat.module';
-import { AuthController } from './auth/auth.controller';
+import { Dialog } from './dialog/dialog.model';
+import { DialogModule } from './dialog/dialog.module';
+import { UserDialog } from './dialog/userDialog.model';
+import { FilesModule } from './files/files.module';
+import { MailModule } from './mail/mail.module';
+import { Media } from './media/media.model';
+import { MediaModule } from './media/media.module';
+import { Message } from './message/message.model';
+import { MessageModule } from './message/message.module';
+import { redisModule } from './module.config';
+import { Subscription } from './subscription/subscription.model';
+import { SubscriptionModule } from './subscription/subscription.module';
+import { LikedTweet } from './tweet/likedTweet.model';
+import { SavedTweet } from './tweet/savedTweet.model';
+import { Tweet } from './tweet/tweet.model';
+import { TweetModule } from './tweet/tweet.module';
 import { TweetCounts } from './tweet/tweetcounts.model';
+import { User } from './user/user.model';
+import { UserModule } from './user/user.module';
+import { UserCounts } from './user/userCounts.model';
 
 
 @Module({
@@ -43,9 +43,10 @@ import { TweetCounts } from './tweet/tweetcounts.model';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      models: [User, Media,Tweet,LikedTweet,SavedTweet,Subscription,Dialog,Message,UserDialog,TweetCounts],
+      models: [User, Media,Tweet,LikedTweet,SavedTweet,Subscription,Dialog,Message,UserDialog,TweetCounts,UserCounts],
       autoLoadModels: true,
-      synchronize: false
+      synchronize: false,
+      
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '.', 'static'),

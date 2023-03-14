@@ -14,17 +14,18 @@ import { Tweet } from './tweet.model';
 import { TweetCounts } from './tweetcounts.model';
 
 const countIncludes = [
-    {model: TweetCounts,attributes:['tweetId','likesCount','savesCount','retweetsCount','commentsCount']}
+    {model: TweetCounts,
+        attributes:['tweetId','likesCount','savesCount','retweetsCount','commentsCount'],}
 ]
 
 const commentExtraIncludes = (id) => [
     {model: Media,as:'tweetMedia'},
     {model: Tweet,required:false,as:'parentRecord', where:{id},include:
     [
-        {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
+        {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]},
 
     ]},
-    {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+    {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]}
 ]
 
 const tweetExtraIncludes = [
@@ -33,9 +34,9 @@ const tweetExtraIncludes = [
     [
         {model: Media,as:'tweetMedia'},
         {model: TweetCounts,on:{"tweetId": {[Op.eq]: Sequelize.col('parentRecord.id')}}},
-        {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]},
+        {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]},
     ]},
-    {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
+    {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]}
 ]
 
 const userActionIncludes = (currentUserId) => [
@@ -151,6 +152,77 @@ export class TweetService {
   
         return result;
     }
+
+    async getTopTweets(filters : DBQueryParameters,currentUserId:string)
+    {   
+        const where=
+        {
+            [Op.and]: 
+            [
+                sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: false } ),            
+            ]
+        }
+
+        if(filters.createdAt)
+        {
+            where[Op.and].push(sequelize.where(sequelize.col('Tweet.createdAt'), { [Op.lt]:filters.createdAt} ));
+        }
+
+        const result = await this.tweetRepository.findAndCountAll(
+        {
+            where,
+            subQuery:false,
+            limit:filters.limit,
+            order:[[Sequelize.col('counts.likesCount'),'DESC'],...filters.order],
+            include:
+            [
+                ...tweetExtraIncludes,
+                ...countIncludes,    
+                ...userActionIncludes(currentUserId)
+            ]
+        }).catch((error) => {
+          this.logger.error(`Top tweets aren't found: ${error.message}`);
+          throw new InternalServerErrorException("Top tweets aren't found. Internal server error.");
+        });
+  
+        return result;
+    }
+
+    async getTweets(filters : DBQueryParameters,currentUserId:string)
+    {   
+        const where=
+        {
+            [Op.and]: 
+            [
+                sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: false } ),            
+            ]
+        }
+
+        if(filters.createdAt)
+        {
+            where[Op.and].push(sequelize.where(sequelize.col('Tweet.createdAt'), { [Op.lt]:filters.createdAt} ));
+        }
+
+        const result = await this.tweetRepository.findAndCountAll(
+        {
+            where,
+            limit:filters.limit,
+            order:[...filters.order],
+            include:
+            [
+                ...tweetExtraIncludes,
+                ...countIncludes,    
+                ...userActionIncludes(currentUserId)
+            ]
+        }).catch((error) => {
+          this.logger.error(`Tweets aren't found: ${error.message}`);
+          throw new InternalServerErrorException("Tweets aren't found. Internal server error.");
+        });
+  
+        return result;
+    }
+
+
     async deleteTweetById(id: string) 
     {
         const tweet = await this.tweetRepository.findByPk(id);

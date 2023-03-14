@@ -5,6 +5,7 @@ import { AuthJWTGuard } from '../auth/guards/auth.guard';
 import { TransactionInterceptor } from '../transactions/transaction.interceptor';
 import { TransactionParam } from '../transactions/transactionParam.decorator';
 import { CreateSubsriptionDTO } from './dto/createSubscription.dto';
+import { DeleteSubsriptionDTO } from './dto/deleteSubscription.dto copy';
 import { UpdateSubscriptionDTO } from './dto/updateSubscription.dto';
 import { Subscription } from './subscription.model';
 import { SubscriptionService } from './subscription.service';
@@ -38,8 +39,8 @@ export class SubscriptionController {
   @ApiOperation({ summary: "Delete subscription" })
   @ApiOkResponse()
   @UseInterceptors(TransactionInterceptor)
-  @Delete("/:id")
-  deleteSubscription(@Param("id") id: string) {
-    return this.subsService.deleteSubscriptionById(id);
+  @Delete()
+  deleteSubscription(@Body() dto: DeleteSubsriptionDTO) {
+    return this.subsService.deleteSubscriptionById(dto.subscriberId,dto.subscribedUserId);
   }
 }

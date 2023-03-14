@@ -125,6 +125,6 @@ export class AuthController {
     @Get("/me")
     getMe(@CurrentUserArgs() currentUser: CurrentUserArgs) 
     {
-        return this.userService.getUserById(currentUser.userId);
+        return this.userService.getMe(currentUser.userId);
     }
 }

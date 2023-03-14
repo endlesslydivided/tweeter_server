@@ -8,6 +8,7 @@ import { Subscription } from "src/subscription/subscription.model";
 import { LikedTweet } from "src/tweet/likedTweet.model";
 import { SavedTweet } from "src/tweet/savedTweet.model";
 import { Tweet } from "src/tweet/tweet.model";
+import { UserCounts } from "./userCounts.model";
 
   
 interface UserCreationAttribute {
@@ -37,6 +38,10 @@ export class User extends Model<User,UserCreationAttribute>
     @ApiProperty({ example: "Kovalyov", description: "User's lastname" })
     @Column({ type: DataType.STRING, allowNull: false })
     surname: string;
+
+    @ApiProperty({ example: "Welcome to my page!", description: "User's profile description" })
+    @Column({ type: DataType.STRING, allowNull: false })
+    description: string;
 
     @ApiProperty({ example: "user@do.mail", description: "User's email" })
     @Column({ type: DataType.STRING, unique: true, allowNull: false })
@@ -72,6 +77,16 @@ export class User extends Model<User,UserCreationAttribute>
     @Column({ type: DataType.INTEGER })
     accessFailedCount: number;
 
+    @ApiProperty({ example: "123e4567-e89b-12d3-a456-426614174000", description: "ID of main photo" })
+    @ForeignKey(() => Media)
+    @Column({ type: DataType.UUID })
+    mainPhotoId: number;
+
+    @ApiProperty({ example: "123e4567-e89b-12d3-a456-426614174000", description: "ID of profile photo" })
+    @ForeignKey(() => Media)
+    @Column({ type: DataType.UUID })
+    profilePhotoId: number;
+
     //User's tweets
     @HasMany(() => Tweet,{as:'tweets',foreignKey:'authorId'})
     tweets: Tweet[]
@@ -93,16 +108,17 @@ export class User extends Model<User,UserCreationAttribute>
     @HasMany(() => Subscription,{as:'following',foreignKey:'subscriberId'})
     subscriptions: User[];
 
-    @ApiProperty({ example: "123e4567-e89b-12d3-a456-426614174000", description: "ID of main photo" })
-    @ForeignKey(() => Media)
-    @Column({ type: DataType.UUID })
-    mainPhotoId: number;
-
     @BelongsTo(() => Media, {
         foreignKey: "mainPhotoId",
-        constraints: false, onDelete: "set null", onUpdate: "cascade"
+        constraints: false, onDelete: "set null", onUpdate: "cascade",as:'mainPhoto'
       })
     mainPhoto: Media;
+
+    @BelongsTo(() => Media, {
+        foreignKey: "profilePhotoId",
+        constraints: false, onDelete: "set null", onUpdate: "cascade",as:'profilePhoto'
+      })
+    profilePhoto: Media;
 
     @BelongsToMany(() => Dialog, () => UserDialog)
     dialogs: Dialog[];
@@ -122,5 +138,13 @@ export class User extends Model<User,UserCreationAttribute>
     @HasMany(() => UserDialog)
     userDialog: UserDialog[]
 
+    @HasMany(() => Subscription,{as:"isSubscribed"})
+    isSubscribed: Subscription;
+    
+    @HasMany(() => Subscription,{as:"isFollower"})
+    isFollower: Subscription;
+
+    @HasOne(() => UserCounts,{as:'counts',foreignKey:'userId'})
+    counts: UserCounts
     
 }
