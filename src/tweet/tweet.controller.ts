@@ -57,6 +57,17 @@ export class TweetController {
     return this.tweetService.getComments(id, filters,currentUser.userId);
   }
 
+  @ApiOperation({ summary: 'Get replies for comment' })
+  @ApiOkResponse({ type: '{rows:Tweet[],count:number}' })
+  @Get('/:id/replies')
+  getReplies(
+    @Param('id') id: string,
+    @Query(new QueryParamsPipe()) filters: QueryParameters,
+    @CurrentUserArgs() currentUser: CurrentUserArgs
+  ): any {
+    return this.tweetService.getReplies(id, filters,currentUser.userId);
+  }
+
   @ApiOperation({ summary: 'Get comments for tweet' })
   @ApiOkResponse({ type: '{rows:Tweet[],count:number}' })
   @Get('/top')

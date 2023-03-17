@@ -1,7 +1,7 @@
 import {  forwardRef, Inject, Injectable, InternalServerErrorException,Logger,NotFoundException} from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common/exceptions';
 import { InjectModel } from '@nestjs/sequelize';
-import sequelize, { where } from 'sequelize';
+import sequelize, { QueryTypes, where } from 'sequelize';
 import { Op, Sequelize, Transaction } from 'sequelize';
 import { Media } from 'src/media/media.model';
 import DBQueryParameters from 'src/requestFeatures/dbquery.params';
@@ -151,6 +151,39 @@ export class TweetService {
         });
   
         return result;
+    }
+
+    async getReplies(id: string,filters : DBQueryParameters,currentUserId:string)
+    {
+      const count = await this.tweetRepository.count({where:{parentRecordId:id,isComment:true}});
+      
+      const tweetIds = await this.tweetRepository.sequelize.query(`select get_comment_replies_ids(:parentRecordId) "id"`,
+        {
+          replacements: {parentRecordId:id},
+          type: QueryTypes.SELECT,
+        }
+      )
+      .then(result =>result.map((x:{id:string}) => x.id))
+      .catch((error) => {
+        this.logger.error(`Comment replies are not found: ${error.message}`);
+        throw new InternalServerErrorException("Comment replies are not found. Internal server error.");
+      });
+
+      const rows = await this.tweetRepository.findAll({
+          where: {id:{[Op.in]:tweetIds}},
+          order:filters.order,
+          include:
+          [
+            ...tweetExtraIncludes,
+            ...countIncludes,
+            ...userActionIncludes(currentUserId)
+          ]
+      }).catch((error) => {
+        this.logger.error(`User saved tweets are not found: ${error.message}`);
+        throw new InternalServerErrorException("User saved tweets are not found. Internal server error.");
+      });
+
+      return {count,rows};
     }
 
     async getTopTweets(filters : DBQueryParameters,currentUserId:string)

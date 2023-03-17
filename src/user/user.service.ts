@@ -127,7 +127,11 @@ export class UserService {
             include: 
               [
                 {model:UserCounts},
-                {model:Media,as:"mainPhoto"}
+                {model:Media,as:"mainPhoto"},
+                {model:Subscription,as:"isSubscribed",required:false, 
+                  on:{[Op.and]:{subscriberId:currentUserId}}},
+                {model:Subscription,as:"isFollower",required:false,
+                on:{[Op.and]:{subscribedUserId:currentUserId}}},
               ],
             subQuery: false,
             attributes:{exclude:['password','salt','accessFailedCount','emailConfirmed']}
@@ -511,7 +515,7 @@ export class UserService {
     {
       const subscriptionsId = await this.subsRepository.findAll({where:{subscriberId:id}}).then((result)=>
       {
-        return result.map((item) => item.id);
+        return result.map((item) => item.subscribedUserId);
       });
 
       const where=
@@ -519,7 +523,7 @@ export class UserService {
           [Op.and]: 
           [
               sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: false } ),
-              sequelize.where(sequelize.col('Tweet.parentRecordId'), { [Op.or]:{[Op.eq]:id,[Op.in]:subscriptionsId}}),             
+              sequelize.where(sequelize.col('Tweet.authorId'), { [Op.or]:{[Op.in]:subscriptionsId}}),             
           ]
       }
 

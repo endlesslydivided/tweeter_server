@@ -4,8 +4,6 @@ import { OrderItem } from "sequelize";
 export default class QueryParameters
 {
     @Transform(({ value }) => parseInt(value))
-    @IsNumber({},{message:"Limit param must be a number"})
-    @Min(1,{message:"Limit param must be greater than 1"}) @Max(100,{message:"Limit param must be less than 100"})
     @IsOptional()
     public limit:number;
 
