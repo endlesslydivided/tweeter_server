@@ -1,6 +1,8 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Transaction } from 'sequelize';
+import { Media } from 'src/media/media.model';
+import { User } from 'src/user/user.model';
 import { CreateMessageDto } from './dto/createMessage.dto';
 import { UpdateMessageDto } from './dto/updateMessage.dto';
 import { Message } from './message.model';
@@ -15,7 +17,8 @@ export class MessageService {
       
     async createMessage(dto: CreateMessageDto) 
     {   
-      const message =  await this.messageRepository.create(dto, {returning:true}).catch((error) => {
+      const message =  await this.messageRepository.create(dto, {returning:true})
+        .catch((error) => {
         this.logger.error(`Message is not created: ${error.message}`);
         throw new InternalServerErrorException("Message is not created.Internal server error");
       });

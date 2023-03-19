@@ -10,6 +10,7 @@ import { UpdateDialogDto } from './dto/updateDialog.dto';
 import { AuthJWTGuard } from '../auth/guards/auth.guard';
 import { QueryParamsPipe } from '../requestFeatures/queryParams.pipe';
 import QueryParameters from '../requestFeatures/query.params';
+import { CurrentUserArgs } from 'src/auth/decorators/currentUserArgs.decorator';
 
 @ApiTags("Dialogs")
 @Controller("dialogs")
@@ -44,8 +45,8 @@ export class DialogController {
   @ApiOperation({ summary: "Get a dialog" })
   @ApiOkResponse({ type: Dialog })
   @Get("/:id")
-  getDialog(@Param("id") id: string) {
-    return this.dialogsService.getDialogById(id);
+  getDialog(@Param("id") id: string,@CurrentUserArgs() currentUser:CurrentUserArgs) {
+    return this.dialogsService.getDialogById(id,currentUser.userId);
   }
 
   @ApiOperation({ summary: "Get paged dialog's messages" })

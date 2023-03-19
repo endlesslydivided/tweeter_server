@@ -8,18 +8,21 @@ import { UserService } from 'src/user/user.service';
 import { AuthJWTGuard } from '../auth/guards/auth.guard';
 import { CreateMessageDto } from '../message/dto/createMessage.dto';
 
-enum ChatClientEvent 
+export enum ChatClientEvent 
 {
-    ReceiveMessage = 'receive_message',
-    ReceiveDialogs = 'receive_dialogs',
-    DialogMessages = 'dialog_messages',
+    SERVER_SENDS_MESSAGE = 'SERVER_SENDS_MESSAGE',
+    SERVER_SENDS_DIALOGS= 'SERVER_SENDS_DIALOGS',
+    SERVER_SENDS_DIALOG_MESSAGES = 'SERVER_SENDS_DIALOG_MESSAGES',
+    SERVER_RETURNS_MESSAGE = 'SERVER_RETURNS_MESSAGE',
+    SERVER_SENDS_DIALOG = 'SERVER_SENDS_DIALOG',
 }
 
-enum ChatServerEvent 
+export enum ChatServerEvent 
 {
-    SendMessage = 'send_message',
-    GetDialogMessages = 'get_dialog_messages',
-    GetDialogs = 'get_dialogs',
+    CLIENT_SEND_MESSAGE = 'CLIENT_SEND_MESSAGE',
+    CLIENT_GET_DIALOG_MESSAGES = 'CLIENT_GET_DIALOG_MESSAGES',
+    CLIENT_GET_DIALOGS = 'CLIENT_GET_DIALOGS',
+    CLIENT_GET_DIALOG = 'CLIENT_GET_DIALOG',
 }
 
 type Message = CreateMessageDto &
@@ -46,38 +49,42 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   server: Server;
 
   
-  @SubscribeMessage(ChatServerEvent.SendMessage)
-  handleSendMessage(@MessageBody() body: Message) 
+  @SubscribeMessage(ChatServerEvent.CLIENT_SEND_MESSAGE)
+  async handleSendMessage(@MessageBody() body: Message & {fromUserId:string, toUserId:string}) 
   {
-    return this.messagesService.createMessage(body.dto).then(async (message) =>
-    {
-      this.server.to(body.fromUserId.toString()).emit(ChatClientEvent.ReceiveMessage, 
-        {message,userId:body.fromUserId,dialogId:body.dto.dialogId});
-      this.server.to(body.toUserId.toString()).emit(ChatClientEvent.ReceiveMessage, 
-        {message,user:body.fromUserId,dialogId:body.dto.dialogId});
-
-    });
-    
+    const message =await this.messagesService.createMessage(body.dto);
+    const user = await this.userService.getUserDataById(body.fromUserId);
+    this.server.to(body.fromUserId.toString()).emit(ChatClientEvent.SERVER_RETURNS_MESSAGE,
+      {message,user,dialogId:body.dto.dialogId});
+    this.server.to(body.toUserId.toString()).emit(ChatClientEvent.SERVER_SENDS_MESSAGE, 
+      {message,user,dialogId:body.dto.dialogId});
   }
 
-  @SubscribeMessage(ChatServerEvent.GetDialogMessages)
+  @SubscribeMessage(ChatServerEvent.CLIENT_GET_DIALOG_MESSAGES)
   async handleGetDialogMessages(@MessageBody() body: any  & {dialogId:string,filters:QueryParameters}) 
   {
     const messages = this.dialogsService.getMessagesByDialog(body.dialogId,body.filters);
     messages.then((messages) =>
     {
-      this.server.to(body.auth.id.toString()).emit(ChatClientEvent.ReceiveMessage, {messages,dialogId:body.dialogId});
+      this.server.to(body.auth.id.toString()).emit(ChatClientEvent.SERVER_SENDS_DIALOG_MESSAGES, {messages,dialogId:body.dialogId});
     })
   }
 
-  @SubscribeMessage(ChatServerEvent.GetDialogs)
+  @SubscribeMessage(ChatServerEvent.CLIENT_GET_DIALOGS)
   async handleGetDialogs(@MessageBody() body: any & {userId:string,filters:QueryParameters}) 
   {
     const dialogs = this.userService.getDialogsByUser(body.userId,body.filters);
     dialogs.then((dialogs) =>
     {
-      this.server.to(body.auth.id.toString()).emit(ChatClientEvent.ReceiveDialogs, dialogs);
+      this.server.to(body.auth.id.toString()).emit(ChatClientEvent.SERVER_SENDS_DIALOGS, dialogs);
     })
+  }
+
+  @SubscribeMessage(ChatServerEvent.CLIENT_GET_DIALOG)
+  async handleGetDialog(@MessageBody() body: any & {dialogId:string}) 
+  {
+    const dialog= await this.dialogsService.getDialogById(body.dialogId,body.auth.id.toString());
+    this.server.to(body.auth.id.toString()).emit(ChatClientEvent.SERVER_SENDS_DIALOG, dialog);
   }
 
   afterInit(server: Server) 
@@ -94,13 +101,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   handleConnection(client: Socket,...args: any[]) 
   {
     const auth = client.handshake.auth;
-    
-    //room to get notified about a particular dialog action for a particular user
-    if(auth.dialogId && auth.id)    client.join(auth.dialogId.toString() + auth.id.toString());
-    //room to get notified about a particular dialog action
-    if(auth.dialogId)      client.join(auth.dialogId.toString())
-    //room to get notified about any action for a particular user
-    if(auth.id)      client.join(auth.id.toString())
+
+    if(auth.id)  client.join(auth.id.toString())
 
     this.logger.log(`Client connected: ${client.id}`);
   }
