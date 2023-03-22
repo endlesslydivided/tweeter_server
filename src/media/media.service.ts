@@ -40,6 +40,31 @@ export class MediaService {
         ));
       }
 
+      createMessageMedia(files: any, messageRecordId: string,transaction: Transaction) 
+      {
+        return Promise.all(files.map( async(file) => 
+        {
+            const path = await this.filesService.createFile(file)
+            .catch(error => 
+              { 
+                this.logger.error(`Error occured during file writing: ${error.message}`);
+                throw new InternalServerErrorException("Error occured during file writing. Internal server error.")
+              });;
+              
+            const originalName =Buffer.from(file.originalname, 'latin1').toString();
+            const {mimetype:type} = file;
+
+            const attachment = await this.mediaRepository.create({ path, messageRecordId,originalName,type }, { transaction })
+            .catch(error => 
+            { 
+              this.logger.error(`Error occured during creating media entry: ${error.message}`);
+              throw new InternalServerErrorException("Error occured during creating media entry. Internal server error.")
+            });
+            return attachment;          
+          }
+        ));
+      }
+
       async createUserPhotoMedia(file: any, transaction: Transaction) 
       {
         const path = await this.filesService.createFile(file)

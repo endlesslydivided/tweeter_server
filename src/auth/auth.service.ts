@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, forwardRef, HttpException, HttpStatus, Inject, Injectable, NotFoundException, PreconditionFailedException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, forwardRef, HttpException, HttpStatus, Inject, Injectable, InternalServerErrorException, NotFoundException, PreconditionFailedException, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { AuthDTO } from "./dto/Auth.dto";
 import * as bcrypt from 'bcrypt';
@@ -15,6 +15,7 @@ import { CurrentUserArgs } from "./decorators/currentUserArgs.decorator";
 import { InvalidRefreshTokenException } from "../exceptions/types/invalidRefreshToken.exception";
 import * as crypto from "crypto"
 import { Session } from "./dto/auth-types";
+import { UpdatePasswordDTO } from "./dto/updatePassword.dto";
 
 @Injectable()
 export class AuthService {
@@ -133,6 +134,28 @@ export class AuthService {
 
         await this.authRepository.createTemporaryUser(emailToken,{...userDto,password,salt});
         await this.mailService.sendUserConfirmation(userDto,emailToken);    
+    }
+
+    async updatePassword(updatePasswordDTO: UpdatePasswordDTO,currentUser:CurrentUserArgs) : Promise<void>
+    {
+        const candidate = await this.userService.getUserByEmail(currentUser.email);
+        if (!candidate) 
+        {
+            throw new BadRequestException("User with such credentials is not found");
+        }
+        const oldPasswordHash = await bcrypt.hash(updatePasswordDTO.oldPassword,candidate.salt);
+
+        if(oldPasswordHash !== candidate.password)
+        {
+            throw new BadRequestException("Old password is incorrect");
+        }
+        const salt = await bcrypt.genSalt();
+        const password = await bcrypt.hash(updatePasswordDTO.newPassword, salt);  
+
+        await candidate.update({password,salt}).catch(e =>
+        {
+            throw new InternalServerErrorException('Some error occured on server during password update');
+        });
     }
 
     async refreshTokens(sessionId: string,fingerprint:string) 

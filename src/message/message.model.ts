@@ -2,6 +2,7 @@ import { BelongsTo, Column, DataType, Default, ForeignKey, HasMany, Model, Table
 import { ApiProperty } from "@nestjs/swagger";
 import { Dialog } from "src/dialog/dialog.model";
 import { User } from "src/user/user.model";
+import { Media } from "src/media/media.model";
 
 
 interface MessageCreationAttribute {
@@ -34,4 +35,8 @@ export class Message extends Model<Message, MessageCreationAttribute> {
 
   @BelongsTo(() => User)
   user: User;
+
+  //Message's media
+  @HasMany(() => Media,"messageRecordId")
+  messageMedia: Media[]
 }

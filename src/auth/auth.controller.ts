@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, forwardRef, Get, HttpStatus, Inject, Param, Post, Query, Req, Res, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, Delete, forwardRef, Get, HttpStatus, Inject, Param, Post, Put, Query, Req, Res, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { ApiBody, ApiCookieAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Response } from "express";
 import { Transaction } from "sequelize";
@@ -14,6 +14,7 @@ import { RefreshTokenArg } from "./decorators/refreshTokenArg.decorator";
 import { Session } from "./dto/auth-types";
 import { AuthDTO } from "./dto/Auth.dto";
 import { RefreshTokensDTO } from "./dto/refreshTokens.dto";
+import { UpdatePasswordDTO } from "./dto/updatePassword.dto";
 import { AuthJWTGuard } from "./guards/auth.guard";
 
 
@@ -49,6 +50,15 @@ export class AuthController {
     signUp(@Body() createUserDTO: CreateUserDTO): Promise<void> 
     {
         return this.authService.signUp(createUserDTO);
+    }
+
+    @ApiOperation({ summary: "Update user password" })
+    @ApiBody({ type: UpdatePasswordDTO })
+    @UseGuards(AuthJWTGuard)
+    @Put('/password')
+    updatePassword(@Body() updatePasswordDTO: UpdatePasswordDTO,@CurrentUserArgs() currentUser: CurrentUserArgs): Promise<void> 
+    {
+        return this.authService.updatePassword(updatePasswordDTO,currentUser);
     }
 
     @ApiCookieAuth("accessToken")

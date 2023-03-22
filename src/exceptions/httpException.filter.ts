@@ -16,10 +16,14 @@ export class HttpExceptionFilter implements ExceptionFilter
     const message  = exception?.message;
     if(exception instanceof ValidationException)
     {
+      let entityErrors = '';
+      for(const key in exception.entityErrors)
+      {
+        entityErrors += exception.entityErrors[key].join('\n');
+      }
       response.status(status)
       .json({
-        message,
-        entityErrors:exception.entityErrors.name.join('\n'),
+        message : entityErrors,
         statusCode: status,
         timestamp: new Date().toISOString(),
         path: request.url,

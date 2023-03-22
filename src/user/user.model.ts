@@ -40,7 +40,7 @@ export class User extends Model<User,UserCreationAttribute>
     surname: string;
 
     @ApiProperty({ example: "Welcome to my page!", description: "User's profile description" })
-    @Column({ type: DataType.STRING, allowNull: false })
+    @Column({ type: DataType.STRING, allowNull: true })
     description: string;
 
     @ApiProperty({ example: "user@do.mail", description: "User's email" })
@@ -110,13 +110,13 @@ export class User extends Model<User,UserCreationAttribute>
 
     @BelongsTo(() => Media, {
         foreignKey: "mainPhotoId",
-        constraints: false, onDelete: "set null", onUpdate: "cascade",as:'mainPhoto'
+        constraints: false, onDelete: "set null", as:'mainPhoto'
       })
     mainPhoto: Media;
 
     @BelongsTo(() => Media, {
         foreignKey: "profilePhotoId",
-        constraints: false, onDelete: "set null", onUpdate: "cascade",as:'profilePhoto'
+        constraints: false, onDelete: "set null", as:'profilePhoto'
       })
     profilePhoto: Media;
 

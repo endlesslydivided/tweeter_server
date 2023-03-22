@@ -2,10 +2,12 @@ import { AfterFind, BelongsTo, Column, CreatedAt, DataType, Default, ForeignKey,
 import { ApiProperty } from "@nestjs/swagger";
 import { Tweet } from "src/tweet/tweet.model";
 import { User } from "src/user/user.model";
+import { Message } from "src/message/message.model";
 
 interface MediaCreationAttribute {
   path: string;
   tweetRecordId: string;
+  messageRecordId:string;
   description: string;
   originalName: string;
   type: string;
@@ -41,11 +43,22 @@ export class Media extends Model<Media, MediaCreationAttribute> {
     @BelongsTo(() => Tweet,{foreignKey:"tweetRecordId",constraints:true,onDelete:"cascade"})
     tweetRecord: Tweet;
 
+    //Message record foreign key
+    @ApiProperty({ example: "0", description: "ID of message record" })
+    @ForeignKey(() => Message)
+    @Column({ type: DataType.UUID, allowNull: true })
+    messageRecordId: string;
+
+    @BelongsTo(() => Message,{foreignKey:"messageRecordId",constraints:true,onDelete:"cascade"})
+    messageRecord: Message;
+
     @HasOne(() => User,"mainPhotoId")
     userMainPhoto: User;
   
     @HasOne(() => User,"profilePhotoId")
     userProfilePhoto: User;
+
+ 
 
 
 }

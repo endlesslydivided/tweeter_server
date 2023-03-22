@@ -50,9 +50,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   
   @SubscribeMessage(ChatServerEvent.CLIENT_SEND_MESSAGE)
-  async handleSendMessage(@MessageBody() body: Message & {fromUserId:string, toUserId:string}) 
+  async handleSendMessage(@MessageBody() body: Message & {fromUserId:string,files:any, toUserId:string}) 
   {
-    const message =await this.messagesService.createMessage(body.dto);
+    const message =await this.messagesService.createMessage(body.files,body.dto);
     const user = await this.userService.getUserDataById(body.fromUserId);
     this.server.to(body.fromUserId.toString()).emit(ChatClientEvent.SERVER_RETURNS_MESSAGE,
       {message,user,dialogId:body.dto.dialogId});

@@ -125,7 +125,7 @@ export class UserService {
             {model:Media,as:"mainPhoto"},
             {model:Media,as:"profilePhoto"}
           ],
-          attributes:['id','firstname','surname','description','email','city','country','sex','emailConfirmed']
+          attributes:['id','firstname','surname','description','email','city','country','sex','description']
         }).catch(e => console.log(e));
 
         if(!user)
@@ -159,7 +159,7 @@ export class UserService {
         return users;
     }
 
-    async updateUserById(mainPhoto:Express.Multer.File,profilePhoto:Express.Multer.File,id:string, dto: UpdateUserDTO,transaction:Transaction) 
+    async updateUserById(id:string, dto: UpdateUserDTO,transaction:Transaction) 
     {
         const user = await this.userRepository.findByPk(id);
 
@@ -169,29 +169,60 @@ export class UserService {
           throw new NotFoundException(`User is not found.`);
         }
 
-        if(mainPhoto)
-        {
-            const media = await this.mediaService.createUserPhotoMedia(mainPhoto, transaction)
-            .catch((error) => 
-            {
-                this.logger.error(`User main photo is not created:${error.message}`);
-                throw new InternalServerErrorException("Error occured during main photo creation. Internal server error.");
-            }); 
-            await media.$set('userMainPhoto',user);
-        }
-
-        if(profilePhoto)
-        {
-            const media = await this.mediaService.createUserPhotoMedia(profilePhoto, transaction)
-            .catch((error) => 
-            {
-                this.logger.error(`User profile photo is not created:${error.message}`);
-                throw new InternalServerErrorException("Error occured during profile photo creation. Internal server error.");
-            }); 
-            await media.$set('userProfilePhoto',user);
-        }
-
         return await user.update(dto,{transaction});
+    }
+
+    async updateMainPhoto(mainPhoto: Express.Multer.File,id:string,transaction:Transaction)
+    {
+      const user = await this.userRepository.findByPk(id);
+
+      if(!user)
+      {
+        this.logger.error(`User is not found: ${id}`);
+        throw new NotFoundException(`User is not found.`);
+      }
+
+
+      const media = await this.mediaService.createUserPhotoMedia(mainPhoto, transaction)
+      .catch((error) => 
+      {
+          this.logger.error(`User main photo is not created:${error.message}`);
+          throw new InternalServerErrorException("Error occured during main photo creation. Internal server error.");
+      }); 
+      await media.$set('userMainPhoto',user).catch((error) => 
+      {
+          this.logger.error(`User main photo is not created:${error.message}`);
+          throw new InternalServerErrorException("Error occured during main photo creation. Internal server error.");
+      });
+
+      return media;
+
+    }
+
+    async updateProfilePhoto(profilePhoto: Express.Multer.File,id:string,transaction:Transaction)
+    {
+      const user = await this.userRepository.findByPk(id);
+
+      if(!user)
+      {
+        this.logger.error(`User is not found: ${id}`);
+        throw new NotFoundException(`User is not found.`);
+      }
+
+    
+      const media = await this.mediaService.createUserPhotoMedia(profilePhoto, transaction)
+      .catch((error) => 
+      {
+          this.logger.error(`User main photo is not created:${error.message}`);
+          throw new InternalServerErrorException("Error occured during main photo creation. Internal server error.");
+      }); 
+      await media.$set('userProfilePhoto',user).catch((error) => 
+      {
+          this.logger.error(`User main photo is not created:${error.message}`);
+          throw new InternalServerErrorException("Error occured during main photo creation. Internal server error.");
+      });
+      return media;
+
     }
 
     async getUserMedia(id:string,filters : DBQueryParameters)

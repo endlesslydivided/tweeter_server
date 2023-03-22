@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
-import { Delete, Post, UploadedFile, UseInterceptors } from '@nestjs/common/decorators';
+import { Delete, Post, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common/decorators';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthJWTGuard } from '../auth/guards/auth.guard';
 import { QueryParamsPipe } from '../requestFeatures/queryParams.pipe';
@@ -9,7 +9,7 @@ import { UpdateUserDTO } from './dto/updateUser.dto';
 import { User } from './user.model';
 import { UserService } from './user.service';
 import { TransactionInterceptor } from '../transactions/transaction.interceptor';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { Transaction } from 'sequelize';
 import { TransactionParam } from '../transactions/transactionParam.decorator';
 import QueryParameters from '../requestFeatures/query.params';
@@ -21,19 +21,40 @@ import { CurrentUserArgs } from 'src/auth/decorators/currentUserArgs.decorator';
 export class UserController {
 
     constructor(private userService: UserService) {}
-  
-    @ApiOperation({ summary: "User update" })
+
+    @ApiOperation({ summary: "My profile update" })
     @ApiOkResponse({ type: User })
-    @UseInterceptors(TransactionInterceptor,FileInterceptor('mainPhoto'),FileInterceptor('profilePhoto'))
-    @Put("/:id")
-    updateUser(@UploadedFile()mainPhoto: Express.Multer.File,
-                @UploadedFile()profilePhoto: Express.Multer.File,
-                @Body() dto: UpdateUserDTO,
-                @Param("id") id: string,
-                @TransactionParam() transaction: Transaction) 
+    @UseInterceptors(TransactionInterceptor)
+    @Put("/me")
+    updateMe(@Body() dto: UpdateUserDTO,@CurrentUserArgs() currentUser:CurrentUserArgs,@TransactionParam() transaction: Transaction) 
     {
-      return this.userService.updateUserById(mainPhoto,profilePhoto,id,dto,transaction);
+      return this.userService.updateUserById(currentUser.userId,dto,transaction);
     }
+
+    @ApiOperation({ summary: "My profile update main photo" })
+    @ApiOkResponse({ type: User })
+    @UseInterceptors(TransactionInterceptor,FileInterceptor('mainPhoto'))
+    @Put("/me/main-photo")
+    updateMainPhoto(
+                    @UploadedFile() mainPhoto: Express.Multer.File,
+                    @CurrentUserArgs() currentUser:CurrentUserArgs,
+                    @TransactionParam() transaction: Transaction) 
+    {
+      return this.userService.updateMainPhoto(mainPhoto,currentUser.userId,transaction);
+    }
+
+    @ApiOperation({ summary: "My profile update profile photo" })
+    @ApiOkResponse({ type: User })
+    @UseInterceptors(TransactionInterceptor,FileInterceptor('profilePhoto'))
+    @Put("/me/profile-photo")
+    updateProfilePhoto(
+                      @UploadedFile() profilePhoto: Express.Multer.File,
+                      @CurrentUserArgs() currentUser:CurrentUserArgs,
+                      @TransactionParam() transaction: Transaction) 
+    {
+      return this.userService.updateProfilePhoto(profilePhoto,currentUser.userId,transaction);
+    }
+  
   
     @ApiOperation({ summary: "Get paged users" })
     @ApiOkResponse({ type: "{rows:User[],count:number}" })

@@ -70,7 +70,7 @@ export class AppModule implements NestModule {
     consumer
       .apply(AuthMiddleware)
       .forRoutes('/tweets','/savedTweets','/likedTweets','/users','/subscriptions','/dialogs',
-      '/auth/sessions','/auth/me')
+      '/auth/sessions','/auth/me','/auth/password')
     consumer
     .apply(RefreshMiddleware)
     .forRoutes('/auth/refreshTokens','/auth/signOut');

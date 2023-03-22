@@ -54,11 +54,9 @@ export class TweetService {
     private logger: Logger = new Logger('TweetService');
 
     constructor(@InjectModel(Tweet) private tweetRepository: typeof Tweet,
-                @InjectModel(LikedTweet) private likedTweetRepository: typeof LikedTweet,
-                @InjectModel(SavedTweet) private savedTweetRepository: typeof SavedTweet,
                 @Inject(forwardRef(() => MediaService)) private mediaService: MediaService){}
 
-    async createTweet(files:any[],dto: CreateTweetDTO,transaction:Transaction) 
+    async createTweet(files: Array<Express.Multer.File>,dto: CreateTweetDTO,transaction:Transaction) 
     {  
         if(dto.isComment && !dto.parentRecordAuthorId && !dto.parentRecordId)   
         {
