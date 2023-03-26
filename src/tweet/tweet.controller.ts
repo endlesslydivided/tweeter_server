@@ -78,6 +78,16 @@ export class TweetController {
     return this.tweetService.getTopTweets(filters,currentUser.userId);
   }
 
+  @ApiOperation({ summary: 'Get tweets with media' })
+  @ApiOkResponse({ type: '{rows:Tweet[],count:number}' })
+  @Get('/media-tweets')
+  getMediatTweets(
+    @Query(new QueryParamsPipe()) filters: QueryParameters,
+    @CurrentUserArgs() currentUser: CurrentUserArgs
+  ): any {
+    return this.tweetService.getMediaTweets(filters,currentUser.userId);
+  }
+
   @ApiOperation({ summary: 'Get tweet' })
   @ApiOkResponse({ type: Tweet })
   @Get('/:id')

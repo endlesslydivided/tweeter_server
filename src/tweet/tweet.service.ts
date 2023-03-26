@@ -19,7 +19,7 @@ const countIncludes = [
 ]
 
 const commentExtraIncludes = (id) => [
-    {model: Media,as:'tweetMedia'},
+    {model: Media,as:'tweetMedia', required:false},
     {model: Tweet,required:false,as:'parentRecord', where:{id},include:
     [
         {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]},
@@ -29,10 +29,10 @@ const commentExtraIncludes = (id) => [
 ]
 
 const tweetExtraIncludes = [
-    {model: Media,as:'tweetMedia'},
+    {model: Media,as:'tweetMedia', required:false},
     {model: Tweet,required:false,as:'parentRecord',include:
     [
-        {model: Media,as:'tweetMedia'},
+        {model: Media,as:'tweetMedia', required:false},
         {model: TweetCounts,on:{"tweetId": {[Op.eq]: Sequelize.col('parentRecord.id')}}},
         {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]},
     ]},
@@ -190,7 +190,8 @@ export class TweetService {
         {
             [Op.and]: 
             [
-                sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: false } ),            
+                sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: false } ), 
+                sequelize.where(sequelize.col('Tweet.isPublic'), { [Op.eq]:true})                           
             ]
         }
 
@@ -219,13 +220,60 @@ export class TweetService {
         return result;
     }
 
+    async getMediaTweets(filters : DBQueryParameters,currentUserId:string)
+    {
+        const where=
+        {
+            [Op.and]: 
+            [
+                sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: false } ),     
+                sequelize.where(sequelize.col('Tweet.isPublic'), { [Op.eq]:true})                
+            ]
+        }
+
+        if(filters.createdAt)
+        {
+            where[Op.and].push(sequelize.where(sequelize.col('Tweet.createdAt'), { [Op.lt]:filters.createdAt} ));
+        }
+
+      const result = await this.tweetRepository.findAndCountAll({
+        where,
+        subQuery:false,
+        limit:filters.limit,
+        order:filters.order,
+        distinct:true,
+        include:
+        [
+          ...countIncludes,
+          ...userActionIncludes(currentUserId),
+          {model: Media,as:'tweetMedia', required:true},
+          {model: Tweet,required:false,as:'parentRecord',include:
+          [
+            {model: Media,as:'tweetMedia', required:true},        
+            {model: TweetCounts,on:{"tweetId": {[Op.eq]: Sequelize.col('parentRecord.id')}}},
+
+            {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]},
+
+          ]},
+          {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]}
+        ]          
+      })     
+      .catch(error =>
+      {
+        console.log(error);         
+      })
+
+      return result;
+    }
+
     async getTweets(filters : DBQueryParameters,currentUserId:string)
     {   
         const where=
         {
             [Op.and]: 
             [
-                sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: false } ),            
+                sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: false } ),      
+                sequelize.where(sequelize.col('Tweet.isPublic'), { [Op.eq]:true})                      
             ]
         }
 

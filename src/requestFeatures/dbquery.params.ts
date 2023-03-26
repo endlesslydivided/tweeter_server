@@ -3,6 +3,8 @@ import { IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, min } from 
 import { OrderItem } from "sequelize";
 export default class DBQueryParameters
 {
+
+
     public limit?:number;
 
     public createdAt?:string;

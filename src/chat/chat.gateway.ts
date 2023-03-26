@@ -11,6 +11,7 @@ import { CreateMessageDto } from '../message/dto/createMessage.dto';
 export enum ChatClientEvent 
 {
     SERVER_SENDS_MESSAGE = 'SERVER_SENDS_MESSAGE',
+    SERVER_SENDS_TWEET = 'SERVER_SENDS_TWEET',
     SERVER_SENDS_DIALOGS= 'SERVER_SENDS_DIALOGS',
     SERVER_SENDS_DIALOG_MESSAGES = 'SERVER_SENDS_DIALOG_MESSAGES',
     SERVER_RETURNS_MESSAGE = 'SERVER_RETURNS_MESSAGE',
@@ -20,6 +21,7 @@ export enum ChatClientEvent
 export enum ChatServerEvent 
 {
     CLIENT_SEND_MESSAGE = 'CLIENT_SEND_MESSAGE',
+    CLIENT_SEND_TWEET = 'CLIENT_SEND_TWEET',
     CLIENT_GET_DIALOG_MESSAGES = 'CLIENT_GET_DIALOG_MESSAGES',
     CLIENT_GET_DIALOGS = 'CLIENT_GET_DIALOGS',
     CLIENT_GET_DIALOG = 'CLIENT_GET_DIALOG',
@@ -52,11 +54,23 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage(ChatServerEvent.CLIENT_SEND_MESSAGE)
   async handleSendMessage(@MessageBody() body: Message & {fromUserId:string,files:any, toUserId:string}) 
   {
-    const message =await this.messagesService.createMessage(body.files,body.dto);
+    const createdMessage =await this.messagesService.createMessage(body.files,body.dto);
     const user = await this.userService.getUserDataById(body.fromUserId);
+    const message =await this.messagesService.getOneMessage(createdMessage.id);
+
     this.server.to(body.fromUserId.toString()).emit(ChatClientEvent.SERVER_RETURNS_MESSAGE,
       {message,user,dialogId:body.dto.dialogId});
     this.server.to(body.toUserId.toString()).emit(ChatClientEvent.SERVER_SENDS_MESSAGE, 
+      {message,user,dialogId:body.dto.dialogId});
+  }
+
+  @SubscribeMessage(ChatServerEvent.CLIENT_SEND_TWEET)
+  async handleSendTweet(@MessageBody() body: Message & {fromUserId:string,files:any, toUserId:string}) 
+  {
+    const createdMessage =await this.messagesService.createMessage(body.files,body.dto);
+    const message =await this.messagesService.getOneMessage(createdMessage.id);
+    const user = await this.userService.getUserDataById(body.fromUserId);
+    this.server.to(body.toUserId.toString()).emit(ChatClientEvent.SERVER_SENDS_TWEET, 
       {message,user,dialogId:body.dto.dialogId});
   }
 

@@ -1,8 +1,9 @@
-import { BelongsTo, Column, DataType, Default, ForeignKey, HasMany, Model, Table } from "sequelize-typescript";
+import { BelongsTo, Column, DataType, Default, ForeignKey, HasMany, HasOne, Model, Table } from "sequelize-typescript";
 import { ApiProperty } from "@nestjs/swagger";
 import { Dialog } from "src/dialog/dialog.model";
 import { User } from "src/user/user.model";
 import { Media } from "src/media/media.model";
+import { Tweet } from "src/tweet/tweet.model";
 
 
 interface MessageCreationAttribute {
@@ -20,7 +21,7 @@ export class Message extends Model<Message, MessageCreationAttribute> {
   id: string;
 
   @ApiProperty({ example: "Hi!", description: "Message text" })
-  @Column({ type: DataType.TEXT, allowNull: false })
+  @Column({ type: DataType.TEXT, allowNull: true })
   text: string;
 
   @ApiProperty({ example: "0", description: "ID of message dialog" })
@@ -33,10 +34,19 @@ export class Message extends Model<Message, MessageCreationAttribute> {
   @Column({ type: DataType.UUID, allowNull: true })
   userId: string;
 
+  @ApiProperty({ example: "0", description: "ID of message tweet" })
+  @ForeignKey(() => Tweet)
+  @Column({ type: DataType.UUID, allowNull: true })
+  messageTweetId: string;
+  
   @BelongsTo(() => User)
   user: User;
 
   //Message's media
   @HasMany(() => Media,"messageRecordId")
   messageMedia: Media[]
+
+  //Retweeted tweet
+  @BelongsTo(() => Tweet,"messageTweetId")
+  messageTweet: Tweet
 }

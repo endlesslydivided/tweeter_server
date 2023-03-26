@@ -1,8 +1,8 @@
 import { Transform } from "class-transformer";
-import { IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, min } from "class-validator";
-import { OrderItem } from "sequelize";
+import { IsIn, IsNumber, IsOptional, IsString, Min } from "class-validator";
 export default class QueryParameters
 {
+
     @Transform(({ value }) => parseInt(value))
     @IsOptional()
     public limit:number;

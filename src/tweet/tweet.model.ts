@@ -5,6 +5,7 @@ import { Media } from "src/media/media.model";
 import { SavedTweet } from "./savedTweet.model";
 import { LikedTweet } from "./likedTweet.model";
 import { TweetCounts } from "./tweetcounts.model";
+import { Message } from "src/message/message.model";
 
 
 interface TweetCreationAttribute {
@@ -77,6 +78,9 @@ export class Tweet extends Model<Tweet, TweetCreationAttribute> {
 
     @BelongsToMany(() => User, () => LikedTweet,"tweetId")
     usersLikes: User[];
+
+    @HasMany(() => Message,"messageTweetId")
+    messages: Message[];
 
     @HasOne(() => SavedTweet,{as:'isSaved'})
     userSavedTweet: SavedTweet

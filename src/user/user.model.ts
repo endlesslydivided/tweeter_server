@@ -3,6 +3,7 @@ import {BelongsTo,BelongsToMany,Column,CreatedAt,DataType,Default,ForeignKey,Has
 import { Dialog } from "src/dialog/dialog.model";
 import { UserDialog } from "src/dialog/userDialog.model";
 import { Media } from "src/media/media.model";
+import { FavoriteMessage } from "src/message/favoriteMessage.model";
 import { Message } from "src/message/message.model";
 import { Subscription } from "src/subscription/subscription.model";
 import { LikedTweet } from "src/tweet/likedTweet.model";
@@ -146,5 +147,8 @@ export class User extends Model<User,UserCreationAttribute>
 
     @HasOne(() => UserCounts,{as:'counts',foreignKey:'userId'})
     counts: UserCounts
+
+    @BelongsToMany(() => Message, () => FavoriteMessage,"userId")
+    favoriteMessages: FavoriteMessage[];
     
 }

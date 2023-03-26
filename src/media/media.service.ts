@@ -14,6 +14,30 @@ export class MediaService {
         @InjectModel(Media) private mediaRepository: typeof Media,
         private filesService: FilesService) {
       }
+
+      fDataFormat = (fileName:string) => {
+
+        let audioFormats = /(\.mp3|\.wav)$/i;
+        let videoFormats = /(\.mp4|\.webm)$/i;
+        let imageFormats = /(\.apng|\.gif|\.ico|\.cur|\.jpg|\.jpeg|\.jfif|\.pjpeg|\.pjp|\.png|\.svg)$/i;
+    
+        if(!!(fileName as string).match(audioFormats))
+        {
+            return 'audio';
+        }
+        else if(!!(fileName as string).match(videoFormats))
+        {
+            return 'video';
+        }
+        else if(!!(fileName as string).match(imageFormats))
+        {
+            return 'image';
+        }
+        else
+        {
+            return 'document';
+        }
+    }
     
       createTweetMedia(files: any, tweetRecordId: string,transaction: Transaction) 
       {
@@ -27,8 +51,7 @@ export class MediaService {
               });;
               
             const originalName =Buffer.from(file.originalname, 'latin1').toString();
-            const {mimetype:type} = file;
-
+            const type = this.fDataFormat(file.originalname)
             const attachment = await this.mediaRepository.create({ path, tweetRecordId,originalName,type }, { transaction })
             .catch(error => 
             { 
@@ -52,7 +75,7 @@ export class MediaService {
               });;
               
             const originalName =Buffer.from(file.originalname, 'latin1').toString();
-            const {mimetype:type} = file;
+            const type = this.fDataFormat(file.originalname)
 
             const attachment = await this.mediaRepository.create({ path, messageRecordId,originalName,type }, { transaction })
             .catch(error => 
@@ -74,7 +97,8 @@ export class MediaService {
             throw new InternalServerErrorException("Error occured during file writing. Internal server error.")
           });
 
-        const {originalname:originalName,mimetype:type} = file;
+        const {originalname:originalName} = file;
+        const type = this.fDataFormat(originalName)
 
         const userPhoto = await this.mediaRepository.create({ path, originalName,type }, { transaction })
         .catch(error => 

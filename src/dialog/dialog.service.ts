@@ -1,10 +1,13 @@
 import { ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import sequelize from 'sequelize';
+import sequelize, { Sequelize } from 'sequelize';
 import { Op } from 'sequelize';
 import { Transaction } from 'sequelize';
+import model from 'sequelize/types/model';
 import DBQueryParameters from 'src/requestFeatures/dbquery.params';
 import { Subscription } from 'src/subscription/subscription.model';
+import { Tweet } from 'src/tweet/tweet.model';
+import { TweetCounts } from 'src/tweet/tweetcounts.model';
 import { Media } from '../media/media.model';
 import { Message } from '../message/message.model';
 import { User } from '../user/user.model';
@@ -139,7 +142,21 @@ export class DialogService {
 
       const messages = await this.messageRepository.findAndCountAll({
           where,
-          include:[{model: User,include:[{model:Media,as:'mainPhoto'}],attributes:["id","createdAt","firstname","surname"],}],
+          include:[
+            {model: User,include:[{model:Media,as:'mainPhoto'}],attributes:["id","createdAt","firstname","surname"],},
+            {model:Media, required:false},
+            {model:Tweet, required:false, include:[
+              {model: TweetCounts},
+              {model: Media,as:'tweetMedia', required:false},
+              {model: Tweet,as:'parentRecord',required:false,include:
+              [
+                  {model: Media,as:'tweetMedia', required:false},
+                  {model: TweetCounts,on:{"tweetId": {[Op.eq]: Sequelize.col('messageTweet.parentRecord.id')}}},
+                  {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]},
+              ]},
+              {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]}
+            ]}
+          ],
           limit:filters.limit,
           order:[[filters.orderBy,filters.orderDirection]],
 

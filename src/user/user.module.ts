@@ -12,6 +12,7 @@ import { Message } from '../message/message.model';
 import { Dialog } from '../dialog/dialog.model';
 import { MediaModule } from '../media/media.module';
 import { UserCounts } from './userCounts.model';
+import { FavoriteMessage } from 'src/message/favoriteMessage.model';
 
 @Module({
   
@@ -19,7 +20,7 @@ import { UserCounts } from './userCounts.model';
   controllers: [UserController],
   imports:[
     MediaModule,
-    SequelizeModule.forFeature([Tweet, User, SavedTweet,LikedTweet,Subscription,Media, Message,Dialog,UserCounts]),
+    SequelizeModule.forFeature([Tweet, User, SavedTweet,LikedTweet,Subscription,Media, Message,Dialog,UserCounts,FavoriteMessage]),
   ],
   exports:[
     UserService

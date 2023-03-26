@@ -1,9 +1,11 @@
 import { forwardRef, Inject, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
-import sequelize, { Sequelize } from 'sequelize';
+import sequelize, { Op, Sequelize } from 'sequelize';
 import { Transaction } from 'sequelize';
 import { Media } from 'src/media/media.model';
 import { MediaService } from 'src/media/media.service';
+import { Tweet } from 'src/tweet/tweet.model';
+import { TweetCounts } from 'src/tweet/tweetcounts.model';
 import { User } from 'src/user/user.model';
 import { CreateMessageDto } from './dto/createMessage.dto';
 import { UpdateMessageDto } from './dto/updateMessage.dto';
@@ -41,6 +43,30 @@ export class MessageService {
               throw new InternalServerErrorException("Error occured during media creation. Internal server error.");
           });  
       }
+      transaction.commit();
+      return message;
+    }
+
+    async getOneMessage(id: string) {
+
+      const message = await this.messageRepository.findByPk(id,{include:[
+        {model:Media, required:false},
+        {model:Tweet, required:false, include:[
+          {model: TweetCounts},
+          {model: Media,as:'tweetMedia', required:false},
+          {model: Tweet,as:'parentRecord',required:false,include:
+          [
+              {model: Media,as:'tweetMedia', required:false},
+              {model: TweetCounts,on:{"tweetId": {[Op.eq]: Sequelize.col('messageTweet.parentRecord.id')}}},
+              {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]},
+          ]},
+          {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]}
+        ]}
+      ]}).catch((error) => {
+        this.logger.error(`Message is not found: ${error.message}`);
+        throw new InternalServerErrorException("Message is not found.Internal server error");
+      });
+  
       return message;
     }
   

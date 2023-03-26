@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { filter } from 'rxjs';
 import sequelize from 'sequelize';
 import { Op, QueryTypes, Sequelize, Transaction } from 'sequelize';
+import { FavoriteMessage } from 'src/message/favoriteMessage.model';
 import { TweetCounts } from 'src/tweet/tweetcounts.model';
 import { Dialog } from '../dialog/dialog.model';
 import { UserDialog } from '../dialog/userDialog.model';
@@ -18,6 +19,7 @@ import { SavedTweet } from '../tweet/savedTweet.model';
 import { Tweet } from '../tweet/tweet.model';
 import { CreateUserDTO } from './dto/createUser.dto';
 import { UpdateUserDTO } from './dto/updateUser.dto';
+import UsersQueryParams from './requestFeatures/UsersQueryParams';
 import { User } from './user.model';
 import { UserCounts } from './userCounts.model';
 
@@ -36,10 +38,10 @@ const userActionIncludes = (currentUserId) => [
 ]
 
 const tweetExtraIncludes = [
-  {model: Media,as:'tweetMedia'},
+  {model: Media,as:'tweetMedia', required:false},
   {model: Tweet,required:false,as:'parentRecord',include:
   [
-    {model: Media,as:'tweetMedia'},        
+    {model: Media,as:'tweetMedia', required:false},        
     {model: TweetCounts,on:{"tweetId": {[Op.eq]: Sequelize.col('parentRecord.id')}}},
 
     {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]},
@@ -59,6 +61,7 @@ export class UserService {
                 @InjectModel(Dialog) private dialogRepository: typeof Dialog,
                 @InjectModel(Media) private mediaRepository: typeof Media,
                 @InjectModel(LikedTweet) private likedTweetRepository: typeof LikedTweet,
+                @InjectModel(FavoriteMessage) private favoriteMessageRepository: typeof FavoriteMessage,
                 @InjectModel(SavedTweet) private savedTweetRepository: typeof SavedTweet,
                 @Inject(forwardRef(() => MediaService)) private mediaService: MediaService)
     {}
@@ -137,26 +140,45 @@ export class UserService {
         return user;
     }
 
-
-
-    async getUsers(filters: DBQueryParameters,currentUserId:string) 
+    async getUsers(filters: UsersQueryParams,currentUserId:string) 
     {    
-        const users = await this.userRepository.findAndCountAll({
-            ...filters, 
-            where:{id:{[Op.ne]:currentUserId}},
-            include: 
-              [
-                {model:UserCounts},
-                {model:Media,as:"mainPhoto"},
-                {model:Subscription,as:"isSubscribed",required:false, 
-                  on:{[Op.and]:{subscriberId:currentUserId}}},
-                {model:Subscription,as:"isFollower",required:false,
-                on:{[Op.and]:{subscribedUserId:currentUserId}}},
-              ],
-            subQuery: false,
-            attributes:{exclude:['password','salt','accessFailedCount','emailConfirmed']}
-        });
-        return users;
+      const searchTerms = filters.search.toLowerCase().trim().split(' ');
+      const where = 
+      {
+        [Op.and]: 
+        [
+          sequelize.where(sequelize.col('User.id'), { [Op.ne]:currentUserId} ),
+
+          sequelize.where(sequelize.col('country'), { [Op.like]: `%${filters.country}%` } ),
+          filters.sex && sequelize.where(sequelize.col('sex'), { [Op.eq]: filters.sex} ),
+          sequelize.where(
+            sequelize.fn('CONCAT',
+            sequelize.fn('LOWER', sequelize.col('firstname')),
+            sequelize.fn('LOWER', sequelize.col('surname')))
+            , {[Op.like]: `%${filters.search.toLowerCase().replace(' ','').trim()}%`})
+        ],
+        [Op.or]: 
+        [
+          ...searchTerms.map(x =>sequelize.where(sequelize.fn('LOWER', sequelize.col('surname')), {[Op.like]: `%${x}%`})),
+          ...searchTerms.map(x =>sequelize.where(sequelize.fn('LOWER', sequelize.col('firstname')), {[Op.like]: `%${x}%`})),          
+        ]
+      }
+      const users = await this.userRepository.findAndCountAll({
+          ...filters, 
+          where,
+          include: 
+            [
+              {model:UserCounts},
+              {model:Media,as:"mainPhoto", required:!!filters.havePhoto},
+              {model:Subscription,as:"isSubscribed",required:false, 
+                on:{[Op.and]:{subscriberId:currentUserId}}},
+              {model:Subscription,as:"isFollower",required:false,
+              on:{[Op.and]:{subscribedUserId:currentUserId}}},
+            ],
+          distinct:true,
+          attributes:{exclude:['password','salt','accessFailedCount','emailConfirmed']}
+      }).catch((e:any) => console.log(e));
+      return users;
     }
 
     async updateUserById(id:string, dto: UpdateUserDTO,transaction:Transaction) 
@@ -225,24 +247,64 @@ export class UserService {
 
     }
 
-    async getUserMedia(id:string,filters : DBQueryParameters)
+    async getUserMedia(id:string,filters : DBQueryParameters,currentUserId:string)
     {
-        const media = await this.mediaRepository.findAndCountAll({
-          ...filters,
-          distinct:true,
-          include:
-          [
-            {
-              model:Tweet,attributes:['id'], where:{authorId:id},
-              include:
-              [            
-                {model: User,as:'author',include: [{model:Media}],attributes:["id","firstname","surname","country","city"]}
-              ]
-            },
-          ],
-        })
+      const isSubscribed = !!(await this.subsRepository.findOne(
+      {
+        where:{[Op.or]:{subscriberId:currentUserId,subscribedUserId:id}}
+      }).catch((e) => console.log(e)))
+        || id === currentUserId;
+  
+      const where=
+        {
+            [Op.and]: 
+            [
+                sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: false } ),
+                sequelize.where(sequelize.col('Tweet.authorId'), { [Op.eq]: id } ),             
+            ]
+      }
+  
+      if(filters.createdAt)
+      {
+          where[Op.and].push(sequelize.where(sequelize.col('Tweet.createdAt'), { [Op.lt]:filters.createdAt} ));
+      }
 
-        return media;
+      if(isSubscribed)
+      {
+        where[Op.and].push(sequelize.where(sequelize.col('Tweet.isPublic'), { [Op.in]:[true, false]}));        
+      }
+      else
+      {
+        where[Op.and].push(sequelize.where(sequelize.col('Tweet.isPublic'), { [Op.eq]:true}));        
+      }
+
+      const result = await this.tweetRepository.findAndCountAll({
+        where,
+        subQuery:false,
+        limit:filters.limit,
+        order:filters.order,
+        include:
+        [
+          ...countIncludes,
+          ...userActionIncludes(currentUserId),
+          {model: Media,as:'tweetMedia', required:true},
+          {model: Tweet,required:false,as:'parentRecord',include:
+          [
+            {model: Media,as:'tweetMedia', required:true},        
+            {model: TweetCounts,on:{"tweetId": {[Op.eq]: Sequelize.col('parentRecord.id')}}},
+
+            {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]},
+
+          ]},
+          {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]}
+        ]          
+      })     
+      .catch(error =>
+      {
+        console.log(error);         
+      })
+
+      return result;
     }
 
     /*#region Simple Get tweets methods */
@@ -319,6 +381,12 @@ export class UserService {
         
     async getUserTweets(id:string,filters : DBQueryParameters,currentUserId:string)
     {
+      const isSubscribed = !!(await this.subsRepository.findOne(
+      {
+        where:{[Op.or]:{subscriberId:currentUserId,subscribedUserId:id}}
+      }).catch((e) => console.log(e)))
+       || id === currentUserId;
+
       const where=
         {
             [Op.and]: 
@@ -331,6 +399,15 @@ export class UserService {
       if(filters.createdAt)
       {
           where[Op.and].push(sequelize.where(sequelize.col('Tweet.createdAt'), { [Op.lt]:filters.createdAt} ));
+      }
+
+      if(isSubscribed)
+      {
+        where[Op.and].push(sequelize.where(sequelize.col('Tweet.isPublic'), { [Op.in]:[true, false]}));        
+      }
+      else
+      {
+        where[Op.and].push(sequelize.where(sequelize.col('Tweet.isPublic'), { [Op.eq]:true}));        
       }
 
       const result = await this.tweetRepository.findAndCountAll({
@@ -356,6 +433,11 @@ export class UserService {
 
     async getUserTweetsAndReplies(id:string,filters : DBQueryParameters,currentUserId:string)
     {
+      const isSubscribed = !!(await this.subsRepository.findOne(
+        {
+          where:{[Op.or]:{subscriberId:currentUserId,subscribedUserId:id}}
+        })) || id === currentUserId;
+
       const where=
         {
             [Op.and]: 
@@ -367,6 +449,15 @@ export class UserService {
       if(filters.createdAt)
       {
           where[Op.and].push(sequelize.where(sequelize.col('Tweet.createdAt'), { [Op.lt]:filters.createdAt} ));
+      }
+
+      if(isSubscribed)
+      {
+        where[Op.and].push(sequelize.where(sequelize.col('Tweet.isPublic'), { [Op.in]:[true, false]}));        
+      }
+      else
+      {
+        where[Op.and].push(sequelize.where(sequelize.col('Tweet.isPublic'), { [Op.eq]:true}));        
       }
 
       const result = await this.tweetRepository.findAndCountAll({
@@ -401,7 +492,8 @@ export class UserService {
           [Op.and]: 
           [
               sequelize.where(sequelize.col('Tweet.isComment'), { [Op.eq]: false } ),
-              sequelize.where(sequelize.col('Tweet.authorId'), { [Op.or]:{[Op.in]:subscriptionsId}}),             
+              sequelize.where(sequelize.col('Tweet.authorId'), { [Op.in]:subscriptionsId}),    
+              sequelize.where(sequelize.col('Tweet.isPublic'), { [Op.or]:[true,false]}),                   
           ]
       }
 
@@ -413,6 +505,7 @@ export class UserService {
 
       const result = await this.tweetRepository.findAndCountAll({
         where,
+        distinct:true,
         limit:filters.limit,
         order:filters.order,
         include:
@@ -549,7 +642,8 @@ export class UserService {
               },
               {
                 model: Message, 
-                attributes: ["createdAt", "text", "userId"],
+                include:[{model:Tweet, required:false}],
+                attributes: ["createdAt", "text", "userId","messageTweetId"],
                 order:[["createdAt", "DESC"]], 
                 limit: 1
               },
@@ -597,6 +691,23 @@ export class UserService {
     async deleteLikedTweetById(userId: string,tweetId:string) 
     {
         return await this.likedTweetRepository.destroy({where:{userId,tweetId}})
+        .catch(e => console.log(e));
+    }
+
+    //Favorite messages
+    async createFavoriteMessage(userId: string,messageId:string) 
+    {
+        return await this.favoriteMessageRepository.create({userId,messageId},{returning:true})
+        .catch((error) =>
+        {
+          this.logger.error(`Message is not marked: ${error.message}`);
+          throw new InternalServerErrorException('Message is not marked. Internal server error.')
+        });
+    }
+
+    async deleteFavoriteMessage(userId: string,messageId:string) 
+    {
+        return await this.favoriteMessageRepository.destroy({where:{userId,messageId}})
         .catch(e => console.log(e));
     }
 }
