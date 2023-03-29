@@ -276,7 +276,7 @@ export class UserController {
 
   @ApiOperation({ summary: 'Mark favorite message' })
   @ApiCreatedResponse({ type: SavedTweet })
-  @Post('/:userId/messages/:messageId')
+  @Post('/:userId/favorite-messages/:messageId')
   markFavoriteMessage(
     @Param('userId') userId: string,
     @Param('messageId') messageId: string,
@@ -285,12 +285,22 @@ export class UserController {
   }
 
   @ApiOperation({ summary: 'Delete favorite message' })
-  @Delete('/:userId/messages/:messageId')
+  @Delete('/:userId/favorite-messages/:messageId')
   deleteFavoriteMessage(
     @Param('userId') userId: string,
     @Param('messageId') messageId: string,
   ) {
     return this.userService.deleteFavoriteMessage(userId, messageId);
+  }
+
+  @ApiOperation({ summary: "Get paged user's saved tweets" })
+  @ApiOkResponse({ type: '{rows:Tweet[],count:number}' })
+  @Get('/:id/favorite-messages')
+  getFavoriteMessagesByUser(
+    @Param('id') id: string,
+    @Query(new QueryParamsPipe()) filters: QueryParameters,
+  ) {
+    return this.userService.getUserFavoriteMessages(id, filters);
   }
   
 }

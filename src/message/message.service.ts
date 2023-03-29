@@ -82,6 +82,17 @@ export class MessageService {
 
     async deleteMessage(id: string) 
     {
-        return await this.messageRepository.destroy({ where: { id } });
+        return await this.messageRepository.destroy({ where: { id } }).catch((error) => {
+          this.logger.error(`Message is not deleted: ${error.message}`);
+          throw new InternalServerErrorException("Message is not deleted.Internal server error");
+        });;
+    }
+
+    async bulkDeleteMessages(ids:Array<string>) 
+    {
+        return await this.messageRepository.destroy({ where: { id:{[Op.in] : ids} } }).catch((error) => {
+          this.logger.error(`Messages are not deleted: ${error.message}`);
+          throw new InternalServerErrorException("Messages are not deleted.Internal server error");
+        });;
     }
 }

@@ -62,6 +62,7 @@ export class UserService {
                 @InjectModel(Media) private mediaRepository: typeof Media,
                 @InjectModel(LikedTweet) private likedTweetRepository: typeof LikedTweet,
                 @InjectModel(FavoriteMessage) private favoriteMessageRepository: typeof FavoriteMessage,
+                @InjectModel(Message) private messageRepository: typeof Message,
                 @InjectModel(SavedTweet) private savedTweetRepository: typeof SavedTweet,
                 @Inject(forwardRef(() => MediaService)) private mediaService: MediaService)
     {}
@@ -709,5 +710,45 @@ export class UserService {
     {
         return await this.favoriteMessageRepository.destroy({where:{userId,messageId}})
         .catch(e => console.log(e));
+    }
+
+    async getUserFavoriteMessages(id:string,filters : DBQueryParameters)
+    {
+        const where=
+        {
+            [Op.and]: 
+            [
+                sequelize.where(sequelize.col('isFavorite.userId'), { [Op.eq]: id } ),
+            ]
+        }
+
+        if(filters.createdAt)
+        {
+            where[Op.and].push(sequelize.where(sequelize.col('isFavorite.createdAt'), { [Op.lt]:filters.createdAt} ));
+        }
+        const result = await this.messageRepository.findAndCountAll({
+          limit:filters.limit,
+          include:[
+            {model: FavoriteMessage,as: 'isFavorite', where,order:filters.order},
+            {model: User,include:[{model:Media,as:'mainPhoto'}],attributes:["id","createdAt","firstname","surname"],},
+            {model:Media, required:false},
+            {model:Tweet, required:false, include:[
+              {model: TweetCounts},
+              {model: Media,as:'tweetMedia', required:false},
+              {model: Tweet,as:'parentRecord',required:false,include:
+              [
+                  {model: Media,as:'tweetMedia', required:false},
+                  {model: TweetCounts,on:{"tweetId": {[Op.eq]: Sequelize.col('messageTweet.parentRecord.id')}}},
+                  {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]},
+              ]},
+              {model: User,as:'author',include: [{model:Media,as:"mainPhoto"}],attributes:["id","firstname","surname","country","city"]}
+            ]}
+          ],
+        }).catch(error =>
+        {
+          console.log(error);         
+        })
+
+      return result;
     }
 }

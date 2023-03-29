@@ -16,6 +16,7 @@ export enum ChatClientEvent
     SERVER_SENDS_DIALOG_MESSAGES = 'SERVER_SENDS_DIALOG_MESSAGES',
     SERVER_RETURNS_MESSAGE = 'SERVER_RETURNS_MESSAGE',
     SERVER_SENDS_DIALOG = 'SERVER_SENDS_DIALOG',
+    SERVER_SENDS_DELETED_MESSAGES = 'SERVER_SENDS_DELETED_MESSAGES',
 }
 
 export enum ChatServerEvent 
@@ -25,6 +26,7 @@ export enum ChatServerEvent
     CLIENT_GET_DIALOG_MESSAGES = 'CLIENT_GET_DIALOG_MESSAGES',
     CLIENT_GET_DIALOGS = 'CLIENT_GET_DIALOGS',
     CLIENT_GET_DIALOG = 'CLIENT_GET_DIALOG',
+    CLIENT_DELETE_MESSAGES = 'CLIENT_DELETE_MESSAGES',
 }
 
 type Message = CreateMessageDto &
@@ -81,6 +83,19 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     messages.then((messages) =>
     {
       this.server.to(body.auth.id.toString()).emit(ChatClientEvent.SERVER_SENDS_DIALOG_MESSAGES, {messages,dialogId:body.dialogId});
+    })
+  }
+
+  @SubscribeMessage(ChatServerEvent.CLIENT_DELETE_MESSAGES)
+  async handleDeleteMessages(@MessageBody() body: any  & {messagesIds:Array<string>,dialogId:string, toUserId:string}) 
+  {
+    const messages = this.messagesService.bulkDeleteMessages(body.messagesIds);
+    messages.then(() =>
+    {
+      this.server.to(body.auth.id.toString()).emit(ChatClientEvent.SERVER_SENDS_DELETED_MESSAGES, 
+        {messagesIds:body.messagesIds,dialogId:body.dialogId});
+      this.server.to(body.toUserId.toString()).emit(ChatClientEvent.SERVER_SENDS_DELETED_MESSAGES, 
+        {messagesIds:body.messagesIds,dialogId:body.dialogId});
     })
   }
 

@@ -4,6 +4,7 @@ import sequelize, { Sequelize } from 'sequelize';
 import { Op } from 'sequelize';
 import { Transaction } from 'sequelize';
 import model from 'sequelize/types/model';
+import { FavoriteMessage } from 'src/message/favoriteMessage.model';
 import DBQueryParameters from 'src/requestFeatures/dbquery.params';
 import { Subscription } from 'src/subscription/subscription.model';
 import { Tweet } from 'src/tweet/tweet.model';
@@ -143,6 +144,7 @@ export class DialogService {
       const messages = await this.messageRepository.findAndCountAll({
           where,
           include:[
+            {model: FavoriteMessage,as: 'isFavorite',required:false},
             {model: User,include:[{model:Media,as:'mainPhoto'}],attributes:["id","createdAt","firstname","surname"],},
             {model:Media, required:false},
             {model:Tweet, required:false, include:[

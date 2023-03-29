@@ -4,6 +4,7 @@ import { Dialog } from "src/dialog/dialog.model";
 import { User } from "src/user/user.model";
 import { Media } from "src/media/media.model";
 import { Tweet } from "src/tweet/tweet.model";
+import { FavoriteMessage } from "./favoriteMessage.model";
 
 
 interface MessageCreationAttribute {
@@ -41,6 +42,9 @@ export class Message extends Model<Message, MessageCreationAttribute> {
   
   @BelongsTo(() => User)
   user: User;
+
+  @HasOne(() => FavoriteMessage,{as:'isFavorite'})
+  userFavoriteMessage: FavoriteMessage
 
   //Message's media
   @HasMany(() => Media,"messageRecordId")
