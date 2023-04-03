@@ -67,7 +67,7 @@ export class MediaService {
       {
         return Promise.all(files.map( async(file) => 
         {
-            const path = await this.filesService.createFile(file)
+            const path = await this.filesService.createMessageFile(file)
             .catch(error => 
               { 
                 this.logger.error(`Error occured during file writing: ${error.message}`);

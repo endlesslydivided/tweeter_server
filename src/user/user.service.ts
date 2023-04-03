@@ -99,6 +99,7 @@ export class UserService {
 
     async getUserById(id: string,currentUserId:string) 
     {
+      
         const user = await  this.userRepository.findByPk(id, {include: 
           [
             {model:UserCounts},
@@ -172,9 +173,17 @@ export class UserService {
               {model:UserCounts},
               {model:Media,as:"mainPhoto", required:!!filters.havePhoto},
               {model:Subscription,as:"isSubscribed",required:false, 
-                on:{[Op.and]:{subscriberId:currentUserId}}},
+              on:
+              {
+                subscriberId:currentUserId,
+                subscribedUserId:{[Op.eq]: sequelize.col('User.id')}
+              }},
               {model:Subscription,as:"isFollower",required:false,
-              on:{[Op.and]:{subscribedUserId:currentUserId}}},
+              on:
+              {
+                subscribedUserId:currentUserId,
+                subscriberId:{[Op.eq]: sequelize.col('User.id')}
+              }},
             ],
           distinct:true,
           attributes:{exclude:['password','salt','accessFailedCount','emailConfirmed']}
@@ -281,7 +290,6 @@ export class UserService {
 
       const result = await this.tweetRepository.findAndCountAll({
         where,
-        subQuery:false,
         limit:filters.limit,
         order:filters.order,
         include:
@@ -326,6 +334,7 @@ export class UserService {
 
       const result = await this.tweetRepository.findAndCountAll({
           limit:filters.limit,
+          paranoid:true,
           include:
           [
             {model: LikedTweet,as:"isLiked", where,order:filters.order},
@@ -361,6 +370,7 @@ export class UserService {
         }
         const result = await this.tweetRepository.findAndCountAll({
           limit:filters.limit,
+          paranoid:true,
           include:
           [
             {model: SavedTweet,as: 'isSaved', where,order:filters.order},
@@ -413,7 +423,7 @@ export class UserService {
 
       const result = await this.tweetRepository.findAndCountAll({
         where,
-        subQuery:false,
+        paranoid:true,
         limit:filters.limit,
         order:filters.order,
         include:
@@ -463,6 +473,7 @@ export class UserService {
 
       const result = await this.tweetRepository.findAndCountAll({
         where,
+        paranoid:true,
         limit:filters.limit,
         order:filters.order,
         include:
@@ -507,6 +518,7 @@ export class UserService {
       const result = await this.tweetRepository.findAndCountAll({
         where,
         distinct:true,
+        paranoid:true,
         limit:filters.limit,
         order:filters.order,
         include:
@@ -594,7 +606,12 @@ export class UserService {
                 [
                     {model:UserCounts},
                     {model:Media,as:"mainPhoto",required:false},
-                    {model:Subscription,as:"isSubscribed",required:false, where:{subscriberId:currentUserId}},
+                    {model:Subscription,as:"isSubscribed", required:false,
+                    on:
+                    {
+                      subscriberId:currentUserId,
+                      subscribedUserId:{[Op.eq]: sequelize.col('subscriber.id')}
+                    }},
                 ],
                 attributes:['id','firstname','surname','description']
             },
@@ -619,7 +636,11 @@ export class UserService {
                     {model:UserCounts},
                     {model:Media,as:"mainPhoto",required:false},
                     {model:Subscription,as:"isSubscribed",required:false,
-                    on:{"subscriberId": {[Op.eq]:currentUserId}}}
+                    on:
+                    {
+                      subscriberId:currentUserId,
+                      subscribedUserId:{[Op.eq]: sequelize.col('subscribedUser.id')}
+                    }},
                 ],
                 attributes:['id','firstname','surname','description']
             },

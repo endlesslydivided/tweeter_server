@@ -28,6 +28,24 @@ export class FilesService {
     }
   }
 
+  async createMessageFile(file: any): Promise<string> {
+    try {
+      const fileName = uuid.v4() + path.extname(file.originalname.toString());
+      const filePath = path.resolve(__dirname, "..", "static");
+      if (!fs.existsSync(filePath)) 
+      {
+        fs.mkdirSync(filePath, { recursive: true });
+      }
+      fs.writeFileSync(path.join(filePath, fileName), file.file);
+      return fileName;
+    } 
+    catch (error) 
+    {
+      this.logger.error(`An error occured during file writing: ${error.message}`);
+      throw new InternalServerErrorException("An error occured during file writing");
+    }
+  }
+
   async readFile(fileName): Promise<Buffer> {
     try 
     {

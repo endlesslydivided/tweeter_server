@@ -135,6 +135,7 @@ export class TweetService {
         const result = await this.tweetRepository.findAndCountAll(
         {
             where,
+            paranoid:true,
             limit:filters.limit,
             order:filters.order,
             include:
@@ -169,6 +170,7 @@ export class TweetService {
 
       const rows = await this.tweetRepository.findAll({
           where: {id:{[Op.in]:tweetIds}},
+          paranoid:true,
           order:filters.order,
           include:
           [
@@ -204,6 +206,7 @@ export class TweetService {
         {
             where,
             subQuery:false,
+            paranoid:true,
             limit:filters.limit,
             order:[[Sequelize.col('counts.likesCount'),'DESC'],...filters.order],
             include:
@@ -239,6 +242,7 @@ export class TweetService {
       const result = await this.tweetRepository.findAndCountAll({
         where,
         subQuery:false,
+        paranoid:true,
         limit:filters.limit,
         order:filters.order,
         distinct:true,
@@ -285,6 +289,7 @@ export class TweetService {
         const result = await this.tweetRepository.findAndCountAll(
         {
             where,
+            paranoid:true,
             limit:filters.limit,
             order:[...filters.order],
             include:

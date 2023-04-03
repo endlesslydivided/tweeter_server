@@ -1,7 +1,9 @@
-import { forwardRef, Inject, Logger, UseGuards } from '@nestjs/common';
-import {SubscribeMessage,WebSocketGateway,OnGatewayInit,WebSocketServer,OnGatewayConnection,OnGatewayDisconnect, MessageBody,} from '@nestjs/websockets';
+import { forwardRef, Inject, Logger, UseFilters, UseGuards } from '@nestjs/common';
+import {SubscribeMessage,WebSocketGateway,OnGatewayInit,
+  WebSocketServer,OnGatewayConnection,OnGatewayDisconnect, MessageBody} from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { DialogService } from 'src/dialog/dialog.service';
+import { HttpExceptionFilter } from 'src/exceptions/httpException.filter';
 import { MessageService } from 'src/message/message.service';
 import QueryParameters from 'src/requestFeatures/query.params';
 import { UserService } from 'src/user/user.service';
@@ -36,8 +38,13 @@ type Message = CreateMessageDto &
     toUserId: string;
 }
 
-@WebSocketGateway(5001,{cors: { origin:  true, credentials: true, preflightContinue: false},path:"/chat"})
-export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect 
+@WebSocketGateway(5001,
+  {
+    cors: { origin:  true, credentials: true, preflightContinue: false},path:"/chat", 
+    pingTimeout: 100000,
+    maxHttpBufferSize: 1e8,
+  })
+export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   constructor( @Inject(forwardRef(() => MessageService)) private messagesService: MessageService,
   @Inject(forwardRef(() => UserService)) private userService: UserService,
@@ -52,7 +59,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @WebSocketServer() 
   server: Server;
 
-  
+
   @SubscribeMessage(ChatServerEvent.CLIENT_SEND_MESSAGE)
   async handleSendMessage(@MessageBody() body: Message & {fromUserId:string,files:any, toUserId:string}) 
   {
@@ -125,6 +132,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   {
     this.logger.log(`Client disconnected: ${client.id}`);
   }
+  
 
   @UseGuards(AuthJWTGuard)
   handleConnection(client: Socket,...args: any[]) 
